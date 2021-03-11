@@ -1,6 +1,7 @@
 package main
 
 import (
+	TTS "Schedule/Structure"
 	"fmt"
 	"github.com/plandem/xlsx"
 	"io"
@@ -9,65 +10,65 @@ import (
 	str "strings"
 )
 
-type lesson struct {
-	subject      string //название предмета
-	typeOfLesson string //тип занятия
-	teacherName  string //фио преподавателя
-	cabinet      string //кабинет
-	numberLesson int    //номер пары
-	//occurrenceLesson []int//номера недель в которых присутствует эта пара
-	occurrenceLesson []bool //номера недель в которых присутствует эта пара
-	exists           bool   //для пустых пар??
-}
+//type lesson struct {
+//	subject      string //название предмета
+//	typeOfLesson string //тип занятия
+//	teacherName  string //фио преподавателя
+//	cabinet      string //кабинет
+//	numberLesson int    //номер пары
+//	//occurrenceLesson []int//номера недель в которых присутствует эта пара
+//	occurrenceLesson []bool //номера недель в которых присутствует эта пара
+//	exists           bool   //для пустых пар??
+//}
+//
+//type day struct {
+//	lessons []lesson
+//}
+//
+//type week struct {
+//	days []day
+//}
+//
+//type group struct {
+//	weeks []week
+//}
 
-type day struct {
-	lessons []lesson
-}
-
-type week struct {
-	days []day
-}
-
-type group struct {
-	weeks []week
-}
-
-func newGroup() group {
-	var g group
-	g.weeks = make([]week, 17)
-	for i := range g.weeks {
-		g.weeks[i] = newWeek()
-	}
-	return g
-}
-
-func newWeek() week {
-	var w week
-	w.days = make([]day, 6)
-	for i := range w.days {
-		w.days[i] = newDay()
-	}
-	return w
-}
-
-func newDay() day {
-	var d day
-	d.lessons = make([]lesson, 8)
-	for i := range d.lessons {
-		d.lessons[i] = newLesson()
-	}
-	return d
-}
-
-func newLesson() lesson {
-	var l lesson
-	l.occurrenceLesson = make([]bool, 17)
-	return l
-}
-
-func (g group) AddLesson(lessons []lesson) {
-	//
-}
+//func newGroup() group {
+//	var g group
+//	g.weeks = make([]week, 17)
+//	for i := range g.weeks {
+//		g.weeks[i] = newWeek()
+//	}
+//	return g
+//}
+//
+//func newWeek() week {
+//	var w week
+//	w.days = make([]day, 6)
+//	for i := range w.days {
+//		w.days[i] = newDay()
+//	}
+//	return w
+//}
+//
+//func newDay() day {
+//	var d day
+//	d.lessons = make([]lesson, 8)
+//	for i := range d.lessons {
+//		d.lessons[i] = newLesson()
+//	}
+//	return d
+//}
+//
+//func newLesson() lesson {
+//	var l lesson
+//	l.occurrenceLesson = make([]bool, 17)
+//	return l
+//}
+//
+//func (g group) AddLesson(lessons []lesson) {
+//	//
+//}
 
 //
 
@@ -125,8 +126,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	//xl, err := xlsx.Open(`C:/Users/Kolya/Downloads/КБиСП 2 курс 2 сем-Д.xlsx`)
-	group := newGroup()
+	group := TTS.NewGroup()
 	table := GetTable(`C:/Users/Kolya/Downloads/ФТИ_1к_20-21_весна.xlsx`)
 
 	fmt.Println(len(table))
@@ -153,21 +155,17 @@ func main() {
 
 }
 
-func GetParseFunc(group string) func(subject, typoOfLesson, teacherName, cabinet string) []lesson {
-	if str.Contains(group, "") { //проверка на институт
-		return ParseFTI
-	} else {
-		return ParseKIB
-	}
+func GetParseFunc(group string) func(subject, typoOfLesson, teacherName, cabinet string) []TTS.Lesson {
+	//проверка на институт
 }
 
-func ParseFTI(subject, typeOfLesson, teacherName, cabinet string) []lesson {
-	return []lesson{newLesson(), newLesson()}
-}
-
-func ParseKIB(subject, typeOfLesson, teacherName, cabinet string) []lesson {
-	return []lesson{newLesson(), newLesson()}
-}
+//func ParseFTI(subject, typeOfLesson, teacherName, cabinet string) []TTS.Lesson {
+//	return []TTS.Lesson{TTS.NewLesson(), TTS.NewLesson()}
+//}
+//
+//func ParseKIB(subject, typeOfLesson, teacherName, cabinet string) []TTS.Lesson {
+//	return []TTS.Lesson{TTS.NewLesson(), TTS.NewLesson()}
+//}
 
 func GetRaws(table [][]string) int { //количество строк в таблице
 	days := [6]string{"ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ", "ПЯТНИЦА", "СУББОТА"}
