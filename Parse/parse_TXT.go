@@ -1,7 +1,7 @@
 package Parse
 
-import TTS "Schedule/Structure"
+import . "Schedule/Structure"
 
-func ParseTXT(subject, typeOfLesson, teacherName, cabinet string) []TTS.Lesson {
-	return []TTS.Lesson{TTS.NewLesson(), TTS.NewLesson()}
+func ParseTXT(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
+	return []Lesson{NewLesson(), NewLesson()}
 }

@@ -1,10 +1,10 @@
 package Parse
 
-import TTS "Schedule/Structure"
+import . "Schedule/Structure"
 
-func ParseFTI(subject, typeOfLesson, teacherName, cabinet string) []TTS.Lesson {
+func ParseFTI(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	//код для парса
 
 	//NewLesson(название, тип, фио, кабинет, массив с неделями, номер пары)
-	return []TTS.Lesson{TTS.NewLesson(), TTS.NewLesson()}
+	return []Lesson{NewLesson(), NewLesson()}
 }
