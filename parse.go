@@ -66,7 +66,7 @@ func newLesson() lesson {
 }
 
 func (g group) AddLesson(lessons []lesson) {
-
+	//
 }
 
 //
@@ -121,7 +121,10 @@ func DownloadFile(filepath string, url string) error {
 }
 
 func main() {
-	DownloadFile(`C:/test.xlsx`, `https://webservices.mirea.ru/upload/iblock/fac/%D0%A4%D0%A2%D0%98_1%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx`)
+	err := DownloadFile(`C:/Users/Kolya/test.xlsx`, `https://webservices.mirea.ru/upload/iblock/fac/%D0%A4%D0%A2%D0%98_1%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx`)
+	if err != nil {
+		panic(err)
+	}
 	//xl, err := xlsx.Open(`C:/Users/Kolya/Downloads/КБиСП 2 курс 2 сем-Д.xlsx`)
 	group := newGroup()
 	table := GetTable(`C:/Users/Kolya/Downloads/ФТИ_1к_20-21_весна.xlsx`)
