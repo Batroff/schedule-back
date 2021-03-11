@@ -9,68 +9,6 @@ import (
 	str "strings"
 )
 
-//type lesson struct {
-//	subject      string //название предмета
-//	typeOfLesson string //тип занятия
-//	teacherName  string //фио преподавателя
-//	cabinet      string //кабинет
-//	numberLesson int    //номер пары
-//	//occurrenceLesson []int//номера недель в которых присутствует эта пара
-//	occurrenceLesson []bool //номера недель в которых присутствует эта пара
-//	exists           bool   //для пустых пар??
-//}
-//
-//type day struct {
-//	lessons []lesson
-//}
-//
-//type week struct {
-//	days []day
-//}
-//
-//type group struct {
-//	weeks []week
-//}
-
-//func newGroup() group {
-//	var g group
-//	g.weeks = make([]week, 17)
-//	for i := range g.weeks {
-//		g.weeks[i] = newWeek()
-//	}
-//	return g
-//}
-//
-//func newWeek() week {
-//	var w week
-//	w.days = make([]day, 6)
-//	for i := range w.days {
-//		w.days[i] = newDay()
-//	}
-//	return w
-//}
-//
-//func newDay() day {
-//	var d day
-//	d.lessons = make([]lesson, 8)
-//	for i := range d.lessons {
-//		d.lessons[i] = newLesson()
-//	}
-//	return d
-//}
-//
-//func newLesson() lesson {
-//	var l lesson
-//	l.occurrenceLesson = make([]bool, 17)
-//	return l
-//}
-//
-//func (g group) AddLesson(lessons []lesson) {
-//	//
-//}
-
-//
-
 func Contains(strings []string, s string) bool {
 	for _, s2 := range strings {
 		if s2 == s {
@@ -79,25 +17,6 @@ func Contains(strings []string, s string) bool {
 	}
 	return false
 }
-
-//func Index() {
-//	url := "https://webservices.mirea.ru/upload/iblock/fac/%D0%A4%D0%A2%D0%98_1%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx"
-//
-//	resp, err := http.Get(url)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	defer resp.Body.Close()
-//
-//	body, err := ioutil.ReadAll(resp.Body)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//
-//	fmt.Println(len(body))
-//	//download the file in browser
-//
-//}
 
 func DownloadFile(filepath string, url string) error {
 
