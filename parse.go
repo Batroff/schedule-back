@@ -1,16 +1,15 @@
 package main
 
 import (
-	. "Schedule/Parse"
-	"Schedule/Structure"
+	. "./Parse"
+	"./Structure"
+	"fmt"
 	"github.com/plandem/xlsx"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
-
-	//"strconv"
 	str "strings"
 )
 
@@ -166,16 +165,16 @@ func Parse() {
 func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) Structure.Group {
 	group := Structure.NewGroup()
 	for i := rowInfo; i < rows; i++ {
-		//if regexp.MustCompile(" *?кр((\\.)|(  ??))").MatchString(table[i][colGroup]) {
-		//	fmt.Println(table[i][colGroup])   //предмет
-		//	fmt.Println(table[i][colGroup+1]) //вид занятия
-		//	fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
-		//	fmt.Println(table[i][colGroup+3]) //№ аудитории
-		//	fmt.Println(table[i][colInfo])    //день недели
-		//	fmt.Println(table[i][colInfo+1])  //№пары
-		//	fmt.Println(table[i][colInfo+4])  //Неделя
-		//	fmt.Println("-------------------------------------------------")
-		//}
+		if regexp.MustCompile(" *?кр((\\.)|(  ??))").MatchString(table[i][colGroup]) {
+			fmt.Println(table[i][colGroup])   //предмет
+			fmt.Println(table[i][colGroup+1]) //вид занятия
+			fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
+			fmt.Println(table[i][colGroup+3]) //№ аудитории
+			fmt.Println(table[i][colInfo])    //день недели
+			fmt.Println(table[i][colInfo+1])  //№пары
+			fmt.Println(table[i][colInfo+4])  //Неделя
+			fmt.Println("-------------------------------------------------")
+		}
 		//fmt.Println(table[i][colGroup])   //предмет
 		//fmt.Println(table[i][colGroup+1]) //вид занятия
 		//fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
