@@ -1,8 +1,9 @@
 package Parse
 
 import (
-	. "../Structure"
+	. "Schedule/Structure"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -26,7 +27,18 @@ func ParseIKBSP(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLe
 	//	fmt.Println(v)
 	//	fmt.Println("----------")
 	//}
-	fmt.Println(subject)
+	// flag на кр regexp на кр
+	if regexp.MustCompile("((^)|( ))кр((\\.)|(  ??))").MatchString(subject) {
+		//flag := true
+	}
+	if regexp.MustCompile("^((\\d{2}|\\d)( *)|( *?, *?)|( *?- *?)){1,17}").MatchString(subject) {
+		loc := regexp.MustCompile("^((\\d{2}|\\d)( *)|( *?, *?)|( *?- *?)){1,17}").FindStringIndex(subject)
+		string := subject[loc[0]:loc[1]]
+		fmt.Println(string)
+		//fmt.Println(subject)
+	}
+
+	//fmt.Println(subject)
 	return []Lesson{NewLesson(), NewLesson()}
 }
 func NewLineSeparator(line string) []string {

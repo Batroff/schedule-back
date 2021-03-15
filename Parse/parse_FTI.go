@@ -1,6 +1,6 @@
 package Parse
 
-import . "../Structure"
+import . "Schedule/Structure"
 
 func ParseFTI(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	//код для парса
