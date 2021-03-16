@@ -1,0 +1,9 @@
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/go-test/deep v1.0.2/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
+github.com/plandem/ooxml v1.1.2 h1:f/ML/k501oeQiODK5O7YRheFWLvdgP3X5hzyaKakcnE=
+github.com/plandem/ooxml v1.1.2/go.mod h1:6ZGylBk9B60EDlMS2DjcXt5laACXuY2huRgQME1KX2A=
+github.com/plandem/xlsx v1.0.4 h1:abZ3pCZQbpFfAEmqWJib4CCorQfj387ZKt1l2/F0+ZU=
+github.com/plandem/xlsx v1.0.4/go.mod h1:3MLLREddOScYVWlU3OlSnla6Ege6V47YifHz14kUZvU=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
