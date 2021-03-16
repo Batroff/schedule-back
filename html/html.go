@@ -1,11 +1,11 @@
 package html
 
 import (
-	"../download"
 	"bufio"
 	"fmt"
 	"os"
 	"regexp"
+	"schedule/download"
 )
 
 func GetLinks(filepath string) []string {
