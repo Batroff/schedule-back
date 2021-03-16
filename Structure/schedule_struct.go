@@ -21,7 +21,7 @@ type Lesson struct {
 	//occurrenceLesson []int//номера недель в которых присутствует эта пара
 	OccurrenceLesson []bool //номера недель в которых присутствует эта пара
 	Exists           bool   //для пустых пар??
-	SubGroup         int    // номер подгруппы
+	//SubGroup         int    // номер подгруппы
 
 }
 
@@ -36,7 +36,7 @@ type Week struct {
 type Group struct {
 	weeks    []Week
 	name     string
-	subGroup bool // номер подгруппы
+	subGroup int // номер подгруппы
 }
 
 func NewGroup() Group {
