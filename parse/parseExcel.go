@@ -42,10 +42,6 @@ func DownloadFile(filepath string, url string) error {
 	return err
 }
 
-func main() {
-	Parse()
-}
-
 func Parse() {
 	links := []string{
 		"https://webservices.mirea.ru/upload/iblock/2c3/%D0%A4%D0%A2%D0%98_1%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx",
@@ -133,16 +129,17 @@ func Parse() {
 func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
 	group := structure.NewGroup()
 	for i := rowInfo; i < rows; i++ {
-		//if regexp.MustCompile(" *?кр((\\.)|(  ??))").MatchString(table[i][colGroup]) {
-		if str.Contains(table[i][colGroup], "гр") || str.Contains(table[i][colGroup], "п/г") {
-			fmt.Println(table[i][colGroup]) //предмет
-			//fmt.Println(table[i][colGroup+1]) //вид занятия
-			//fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
-			//fmt.Println(table[i][colGroup+3]) //№ аудитории
-			//fmt.Println(table[i][colInfo])    //день недели
-			//fmt.Println(table[i][colInfo+1])  //№пары
-			//fmt.Println(table[i][colInfo+4])  //Неделя
-			//fmt.Println("-------------------------------------------------")
+		if regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)[^А-Яа-я]").MatchString(table[i][colGroup]) { //проверка на подгруппы
+			//if str.Contains(table[i][colGroup], "гр") || str.Contains(table[i][colGroup], "п/г") {
+			//	fmt.Println(table[i][colGroup]) //предмет
+			//	fmt.Println(table[i][colGroup+1]) //вид занятия
+			//	fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
+			//	fmt.Println(table[i][colGroup+3]) //№ аудитории
+			//	fmt.Println(table[i][colInfo])    //день недели
+			//	fmt.Println(table[i][colInfo+1])  //№пары
+			//	fmt.Println(table[i][colInfo+4])  //Неделя
+			//	fmt.Println("-------------------------------------------------")
+			SubGroupParse(table[i][colGroup], table[i][colGroup+1], table[i][colGroup+2], table[i][colGroup+3], table[i][colInfo], table[i][colInfo+1], table[i][colInfo])
 		}
 		//table[i][colGroup])   //предмет
 		//table[i][colGroup+1] //вид занятия
