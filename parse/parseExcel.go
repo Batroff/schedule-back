@@ -1,13 +1,13 @@
-package main
+package parse
 
 import (
-	"Schedule/Structure"
 	"fmt"
 	"github.com/plandem/xlsx"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
+	"schedule/structure"
 	"strconv"
 	str "strings"
 )
@@ -130,8 +130,8 @@ func Parse() {
 	}
 }
 
-func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) Structure.Group {
-	group := Structure.NewGroup()
+func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
+	group := structure.NewGroup()
 	for i := rowInfo; i < rows; i++ {
 		//if regexp.MustCompile(" *?кр((\\.)|(  ??))").MatchString(table[i][colGroup]) {
 		if str.Contains(table[i][colGroup], "гр") || str.Contains(table[i][colGroup], "п/г") {

@@ -1,9 +1,9 @@
-package Parse
+package parse
 
 import (
-	. "Schedule/Structure"
 	"fmt"
 	"regexp"
+	. "schedule/structure"
 	"strconv"
 	"strings"
 )
