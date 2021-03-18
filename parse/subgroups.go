@@ -60,26 +60,49 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		typesOfLessons := strings.Split(typeOfLesson, "\n")
 		teachersNames := strings.Split(teacherName, "\n")
 		cabinets := strings.Split(cabinet, "\n")
-		length := len(subjects) + len(typesOfLessons) + len(teachersNames) + len(cabinets)
+		max := Max(len(subjects), len(typesOfLessons), len(teachersNames), len(cabinets)) // максимальное число строк в ячейке
 		collection := [][]string{
 			subjects, typesOfLessons, teachersNames, cabinets,
 		}
-		flag := false
+		flag := false // количество строк в каждой ячейке неодинаковое
 		for _, strings1 := range collection {
-			if len(strings1) != length/4 {
-				flag = true
+			if len(strings1) != max {
+				flag = true // в какой-то ячейке
 			}
 		}
 		if flag {
-			fmt.Println(subject)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(typeOfLesson)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(teacherName)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(cabinet)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-		} //раскидать по урокам дублировав необходимые значения и передать в дальнейший парс
+			//fmt.Println(subject)
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println(typeOfLesson)
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println(teacherName)
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println(cabinet)
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		} else { //раскидать по урокам дублировав необходимые значения и передать в дальнейший парс
+
+		}
 	}
 	return []Lesson{NewLesson(), NewLesson()}
+}
+
+func SortDataBySubgroup(subjects, typesOfLesson, teachersName, cabinets []string) {
+
+}
+
+func Max(number ...int) int {
+	max := 0
+	for _, num := range number {
+		if max < num {
+			max = num
+		}
+	}
+	return max
+}
+
+func CheckForEmptyElements(collection []string) []string { // очистка массива от пустых элементов
+	for i, s := range collection {
+		fmt.Println(i, s)
+	}
+	return collection
 }
