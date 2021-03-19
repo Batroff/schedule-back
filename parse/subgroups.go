@@ -52,10 +52,45 @@ import (
 //~~~~~~~~~~~~~~~~~~~~~~~~~~
 //242
 //~~~~~~~~~~~~~~~~~~~~~~~~~~
+//КМБО-05-20
+//3,7,11,15 н. Правоведение
+//5 н. Методы и стандарты программирования (2 п/г)
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//пр
+//пр
+//
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Леонова С.Л.
+//Смирнов А.В.
+//
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//А-203
+//Б-209
+//
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//ЧЕТВЕРГ
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//4
+//Ин.яз(1 подгр.)/Ин.яз. 2 подгр
+//Ин. язык (нем.)
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//пр
+//пр
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Курсевич Д.В./ Каппушева И.Ш.
+//Гриценко С.А.
+//~~~~~~~~~~~~~~~~~~~~~~~~~~
+//И-303
+//И-311
+//Б-402
+//надо удалить энтеры после этого
+//В-78*
+//В-419
 
 func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	//несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
-	if strings.Contains(subject, "\n") {
+	var lessons []Lesson
+	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
 		subjects := strings.Split(subject, "\n")
 		typesOfLessons := strings.Split(typeOfLesson, "\n")
 		teachersNames := strings.Split(teacherName, "\n")
@@ -64,23 +99,58 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		collection := [][]string{
 			subjects, typesOfLessons, teachersNames, cabinets,
 		}
+		if Contains(subjects, "…………………") {
+			for i, s := range subjects {
+				if s == "…………………" {
+					RemoveElement(subjects, i)
+				}
+			}
+		}
 		flag := false // количество строк в каждой ячейке неодинаковое
 		for _, strings1 := range collection {
 			if len(strings1) != max {
-				flag = true // в какой-то ячейке
+				flag = true // в какой-то ячейке кол-во строк неодинаковое
 			}
 		}
 		if flag {
-			//fmt.Println(subject)
-			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			//fmt.Println(typeOfLesson)
-			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			//fmt.Println(teacherName)
-			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			//fmt.Println(cabinet)
-			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(subject)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(typeOfLesson)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(teacherName)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(cabinet)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(dayOfWeek)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			fmt.Println(numberLesson)
+			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		} else { //раскидать по урокам дублировав необходимые значения и передать в дальнейший парс
+			for i := 0; i < max; i++ {
+				if collection[0][i] == "" && collection[1][i] == "" && collection[2][i] == "" && collection[3][i] == "" {
+					collection[0] = RemoveElement(collection[0], i)
+					collection[1] = RemoveElement(collection[1], i)
+					collection[2] = RemoveElement(collection[2], i)
+					collection[3] = RemoveElement(collection[3], i)
+					max--
+					continue
+				}
+				someLesson := NewLesson()
+				someLesson.Subject = collection[0][i]
+				someLesson.TypeOfLesson = collection[1][i]
+				someLesson.TeacherName = collection[2][i]
+				someLesson.Cabinet = collection[3][i]
+				lessons = append(lessons, someLesson) // массив с уроками "предмет с/без п/г" "тип" "фио" "кабинет"
+			}
 
+			//for i, lesson := range lessons {
+			//	fmt.Println(lesson.Subject)
+			//	fmt.Println(lesson.TypeOfLesson)
+			//	fmt.Println(lesson.TeacherName)
+			//	fmt.Println(lesson.Cabinet)
+			//	fmt.Println(i)
+			//	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//}
 		}
 	}
 	return []Lesson{NewLesson(), NewLesson()}
@@ -100,9 +170,23 @@ func Max(number ...int) int {
 	return max
 }
 
-func CheckForEmptyElements(collection []string) []string { // очистка массива от пустых элементов
-	for i, s := range collection {
-		fmt.Println(i, s)
-	}
-	return collection
+//func CheckForEmptyElements(array [][]string) [][]string { // очистка массива от пустых элементов
+//	flag := false
+//	for i, s := range array {
+//		for i2, s2 := range s {
+//			if s2 == "" {
+//				flag = true
+//			} else if flag{
+//				return array
+//			}
+//		}
+//	}
+//	for i, i2 := range array {
+//
+//	}
+//	return array
+//}
+
+func RemoveElement(a []string, i int) []string {
+	return append(a[:i], a[i+1:]...)
 }
