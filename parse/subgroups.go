@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+	"regexp"
 	. "schedule/structure"
 	"strings"
 )
@@ -91,6 +92,11 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 	//несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
 	var lessons []Lesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
+		if strings.Contains(cabinet, "В-78*\n") || strings.Contains(cabinet, "В-86*\n") || strings.Contains(cabinet, "МП-1*\n") {
+			strings.ReplaceAll(cabinet, "В-78*\n", "В-78* ")
+			strings.ReplaceAll(cabinet, "В-86*\n", "В-86* ")
+			strings.ReplaceAll(cabinet, "МП-1*\n", "МП-1* ")
+		}
 		subjects := strings.Split(subject, "\n")
 		typesOfLessons := strings.Split(typeOfLesson, "\n")
 		teachersNames := strings.Split(teacherName, "\n")
@@ -113,6 +119,12 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 			}
 		}
 		if flag {
+			if true /*Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода*/ {
+
+			} else {
+
+			}
+
 			fmt.Println(subject)
 			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
 			fmt.Println(typeOfLesson)
@@ -189,4 +201,74 @@ func Max(number ...int) int {
 
 func RemoveElement(a []string, i int) []string {
 	return append(a[:i], a[i+1:]...)
+}
+
+//Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода
+func FixSameSubjectParameters(subjects, typeOfLessons, teachersNames, cabinets []string) {
+	for i, subject := range subjects {
+		for i2, s := range subjects[i+1:] {
+			reg := regexp.MustCompile("[^\\d()][А-я -]+")
+			str1 := strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(subject, -1)), " ", ""))
+			str2 := strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(s, -1)), " ", ""))
+			if str1 == str2 {
+				for len(typeOfLessons) < len(subjects) {
+					typeOfLessons = append(typeOfLessons, "")
+				}
+				if typeOfLessons[i] == "" {
+					typeOfLessons[i] = typeOfLessons[i2]
+				} else if typeOfLessons[i2] == "" {
+					typeOfLessons[i2] = typeOfLessons[i]
+				} else {
+					fmt.Println("А как? Функция FixSameSubjectParameters")
+					fmt.Println("Тип занятия")
+					fmt.Println(subjects)
+					fmt.Println(typeOfLessons)
+					fmt.Println(teachersNames)
+					fmt.Println(cabinets)
+				}
+
+				for len(teachersNames) < len(subjects) {
+					teachersNames = append(teachersNames, "")
+				}
+				if teachersNames[i] == "" {
+					teachersNames[i] = teachersNames[i2]
+				} else if teachersNames[i2] == "" {
+					teachersNames[i2] = teachersNames[i]
+				} else {
+					fmt.Println("А как? Функция FixSameSubjectParameters")
+					fmt.Println("Преподы")
+					fmt.Println(subjects)
+					fmt.Println(typeOfLessons)
+					fmt.Println(teachersNames)
+					fmt.Println(cabinets)
+				}
+
+				for len(cabinets) < len(subjects) {
+					cabinets = append(cabinets, "")
+				}
+				if cabinets[i] == "" {
+					cabinets[i] = cabinets[i2]
+				} else if cabinets[i2] == "" {
+					cabinets[i2] = cabinets[i]
+				} else {
+					fmt.Println("А как? Функция FixSameSubjectParameters")
+					fmt.Println("Кабинеты")
+					fmt.Println(subjects)
+					fmt.Println(typeOfLessons)
+					fmt.Println(teachersNames)
+					fmt.Println(cabinets)
+				}
+			}
+		}
+	}
+}
+
+func LongestString(s []string) string {
+	max := 0
+	for _, s2 := range s {
+		if len(s2) > max {
+			max = len(s2)
+		}
+	}
+	return s[max]
 }
