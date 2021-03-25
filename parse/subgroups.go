@@ -7,91 +7,18 @@ import (
 	"strings"
 )
 
-//случаи
-//#1
-//1,5,9,13 н. Цифровая обработка оптических сигналов (1 п/г)
-//3,7,11,15 н. Цифровая обработка оптических сигналов (2 п/г)
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//лаб
-//лаб
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Маняк А.П.
-//Маняк А.П.
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//В-401-1
-//В-401-1
-//#2
-//2,6 н. Системы автоматизированного проектирования и виртуальные приборы в оптотехнике (1 п/г)
-//4,8 н. Системы автоматизированного проектирования и виртуальные приборы в оптотехнике (2 п/г)
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//лаб
-//лаб
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Кретушев А.В.
-//Кретушев А.В.
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//В-401-1
-//#3
-//3,7,11,15н Метрология, стандартизация и сертификация
-//9,13 н ТКМ, 1 гр / 2 гр
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//лр
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Чернова А.В.
-//Зуев В.В./Баранова Н.С.
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//В-78* В-419
-//254/244
-//#4
-//2-8 н Теория соединения материалов
-//10,14н-1гр 12,16н-2 гр Тепл. проц. в ТС
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//пр
-//лр
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Кудрявцев И.В.
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//242
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//КМБО-05-20
-//3,7,11,15 н. Правоведение
-//5 н. Методы и стандарты программирования (2 п/г)
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//пр
-//пр
-//
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Леонова С.Л.
-//Смирнов А.В.
-//
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//А-203
-//Б-209
-//
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//ЧЕТВЕРГ
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//4
-//Ин.яз(1 подгр.)/Ин.яз. 2 подгр
-//Ин. язык (нем.)
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//пр
-//пр
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//Курсевич Д.В./ Каппушева И.Ш.
-//Гриценко С.А.
-//~~~~~~~~~~~~~~~~~~~~~~~~~~
-//И-303
-//И-311
-//Б-402
-//надо удалить энтеры после этого
-//В-78*
-//В-419
-
 func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	//несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
 	var lessons []Lesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
+		fmt.Println("ПРЕДМЕТ:")
+		fmt.Println(subject)
+		fmt.Println("ТИП:")
+		fmt.Println(typeOfLesson)
+		fmt.Println("ФИО:")
+		fmt.Println(teacherName)
+		fmt.Println("КАБИНЕТ:")
+		fmt.Println(cabinet)
 		if strings.Contains(cabinet, "В-78*\n") || strings.Contains(cabinet, "В-86*\n") || strings.Contains(cabinet, "МП-1*\n") {
 			strings.ReplaceAll(cabinet, "В-78*\n", "В-78* ")
 			strings.ReplaceAll(cabinet, "В-86*\n", "В-86* ")
@@ -102,70 +29,69 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		teachersNames := strings.Split(teacherName, "\n")
 		cabinets := strings.Split(cabinet, "\n")
 		max := Max(len(subjects), len(typesOfLessons), len(teachersNames), len(cabinets)) // максимальное число строк в ячейке
-		collection := [][]string{
-			subjects, typesOfLessons, teachersNames, cabinets,
-		}
-		if Contains(subjects, "…………………") {
+
+		if Contains(subjects, "…………………") { // =)
 			for i, s := range subjects {
 				if s == "…………………" {
 					RemoveElement(subjects, i)
 				}
 			}
 		}
-		flag := false // количество строк в каждой ячейке неодинаковое
-		for _, strings1 := range collection {
-			if len(strings1) != max {
-				flag = true // в какой-то ячейке кол-во строк неодинаковое
+		subjects, typesOfLessons, teachersNames, cabinets = FixSameSubjectParameters(subjects, typesOfLessons, teachersNames, cabinets)
+
+		for i := 0; i < max; i++ {
+			if len(subjects) != max || len(typesOfLessons) != max || len(teachersNames) != max || len(cabinets) != max {
+				fmt.Println(subjects)
+				fmt.Println(typesOfLessons)
+				fmt.Println(teachersNames)
+				fmt.Println(cabinets)
 			}
 		}
-		if flag {
-			if true /*Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода*/ {
 
-			} else {
-
-			}
-
-			fmt.Println(subject)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(typeOfLesson)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(teacherName)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(cabinet)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(dayOfWeek)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println(numberLesson)
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~")
-		} else { //раскидать по урокам дублировав необходимые значения и передать в дальнейший парс
-			for i := 0; i < max; i++ {
-				if collection[0][i] == "" && collection[1][i] == "" && collection[2][i] == "" && collection[3][i] == "" {
-					collection[0] = RemoveElement(collection[0], i)
-					collection[1] = RemoveElement(collection[1], i)
-					collection[2] = RemoveElement(collection[2], i)
-					collection[3] = RemoveElement(collection[3], i)
-					max--
-					continue
-				}
-				someLesson := NewLesson()
-				someLesson.Subject = collection[0][i]
-				someLesson.TypeOfLesson = collection[1][i]
-				someLesson.TeacherName = collection[2][i]
-				someLesson.Cabinet = collection[3][i]
-				lessons = append(lessons, someLesson) // массив с уроками "предмет с/без п/г" "тип" "фио" "кабинет"
-			}
-
-			//for i, lesson := range lessons {
-			//	fmt.Println(lesson.Subject)
-			//	fmt.Println(lesson.TypeOfLesson)
-			//	fmt.Println(lesson.TeacherName)
-			//	fmt.Println(lesson.Cabinet)
-			//	fmt.Println(i)
-			//	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			//}
+		collection := [][]string{
+			subjects, typesOfLessons, teachersNames, cabinets,
 		}
+
+		length := len(collection[0])
+
+		for i := 0; i < length; i++ {
+			if collection[0][i] == "" && collection[1][i] == "" && collection[2][i] == "" && collection[3][i] == "" {
+				collection[0] = RemoveElement(collection[0], i)
+				collection[1] = RemoveElement(collection[1], i)
+				collection[2] = RemoveElement(collection[2], i)
+				collection[3] = RemoveElement(collection[3], i)
+				length--
+				continue
+			}
+			someLesson := NewLesson()
+			someLesson.Subject = collection[0][i]
+			someLesson.TypeOfLesson = collection[1][i]
+			someLesson.TeacherName = collection[2][i]
+			someLesson.Cabinet = collection[3][i]
+			lessons = append(lessons, someLesson) // массив с уроками "предмет с/без п/г" "тип" "фио" "кабинет"
+		}
+		fmt.Println("Предметы:")
+		for _, s := range subjects {
+			fmt.Println(s)
+		}
+		fmt.Println("Тип занятий")
+		for _, lesson := range typesOfLessons {
+			fmt.Println(lesson)
+		}
+		fmt.Println("ФИО")
+		for _, teachersName := range teachersNames {
+			fmt.Println(teachersName)
+		}
+		fmt.Println("Кабинет")
+		for _, s := range cabinets {
+			fmt.Println(s)
+
+		}
+
+	} else { // в строке нет энтеров
+
 	}
-	return []Lesson{NewLesson(), NewLesson()}
+	return lessons
 }
 
 func SortDataBySubgroup(subjects, typesOfLesson, teachersName, cabinets []string) {
@@ -182,93 +108,96 @@ func Max(number ...int) int {
 	return max
 }
 
-//func CheckForEmptyElements(array [][]string) [][]string { // очистка массива от пустых элементов
-//	flag := false
-//	for i, s := range array {
-//		for i2, s2 := range s {
-//			if s2 == "" {
-//				flag = true
-//			} else if flag{
-//				return array
-//			}
-//		}
-//	}
-//	for i, i2 := range array {
-//
-//	}
-//	return array
-//}
-
+//Удаляет элемент из среза строк по индексу
 func RemoveElement(a []string, i int) []string {
 	return append(a[:i], a[i+1:]...)
 }
 
-//Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода
-func FixSameSubjectParameters(subjects, typeOfLessons, teachersNames, cabinets []string) {
+//Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода или задублировать последним найденным
+func FixSameSubjectParameters(subjects, typeOfLessons, teachersNames, cabinets []string) (rsubjects []string, rtypeOfLessons []string, rteachersNames []string, rcabinets []string) {
+	for len(typeOfLessons) < len(subjects) {
+		typeOfLessons = append(typeOfLessons, "")
+	}
+
+	for len(teachersNames) < len(subjects) {
+		teachersNames = append(teachersNames, "")
+	}
+
+	for len(cabinets) < len(subjects) {
+		cabinets = append(cabinets, "")
+	}
 	for i, subject := range subjects {
-		for i2, s := range subjects[i+1:] {
+		for i2, s := range subjects[i+1:] { // i2 относителен поэтому i + i2 + 1
 			reg := regexp.MustCompile("[^\\d()][А-я -]+")
-			str1 := strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(subject, -1)), " ", ""))
-			str2 := strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(s, -1)), " ", ""))
-			if str1 == str2 {
-				for len(typeOfLessons) < len(subjects) {
-					typeOfLessons = append(typeOfLessons, "")
-				}
+			index := i2 + i + 1
+			str1 := strings.ReplaceAll(strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(subject, -1)), " ", "")), "н", "")
+			str2 := strings.ReplaceAll(strings.ToLower(strings.ReplaceAll(LongestString(reg.FindAllString(s, -1)), " ", "")), "н", "")
+			if str1 == str2 { // если 2 предмета одинаковые
 				if typeOfLessons[i] == "" {
-					typeOfLessons[i] = typeOfLessons[i2]
-				} else if typeOfLessons[i2] == "" {
-					typeOfLessons[i2] = typeOfLessons[i]
-				} else {
-					fmt.Println("А как? Функция FixSameSubjectParameters")
-					fmt.Println("Тип занятия")
-					fmt.Println(subjects)
-					fmt.Println(typeOfLessons)
-					fmt.Println(teachersNames)
-					fmt.Println(cabinets)
+					typeOfLessons[i] = typeOfLessons[index]
+				}
+				if typeOfLessons[index] == "" {
+					typeOfLessons[index] = typeOfLessons[i]
 				}
 
-				for len(teachersNames) < len(subjects) {
-					teachersNames = append(teachersNames, "")
-				}
 				if teachersNames[i] == "" {
-					teachersNames[i] = teachersNames[i2]
-				} else if teachersNames[i2] == "" {
-					teachersNames[i2] = teachersNames[i]
-				} else {
-					fmt.Println("А как? Функция FixSameSubjectParameters")
-					fmt.Println("Преподы")
-					fmt.Println(subjects)
-					fmt.Println(typeOfLessons)
-					fmt.Println(teachersNames)
-					fmt.Println(cabinets)
+					teachersNames[i] = teachersNames[index]
+				}
+				if teachersNames[index] == "" {
+					teachersNames[index] = teachersNames[i]
 				}
 
-				for len(cabinets) < len(subjects) {
-					cabinets = append(cabinets, "")
-				}
 				if cabinets[i] == "" {
-					cabinets[i] = cabinets[i2]
-				} else if cabinets[i2] == "" {
-					cabinets[i2] = cabinets[i]
-				} else {
-					fmt.Println("А как? Функция FixSameSubjectParameters")
-					fmt.Println("Кабинеты")
-					fmt.Println(subjects)
-					fmt.Println(typeOfLessons)
-					fmt.Println(teachersNames)
-					fmt.Println(cabinets)
+					cabinets[i] = cabinets[index]
+				}
+				if cabinets[index] == "" {
+					cabinets[index] = cabinets[i]
 				}
 			}
 		}
 	}
+	typeOfLessons = RepeatFunc(typeOfLessons)
+	teachersNames = RepeatFunc(teachersNames)
+	cabinets = RepeatFunc(cabinets)
+	return subjects, typeOfLessons, teachersNames, cabinets
 }
 
-func LongestString(s []string) string {
-	max := 0
-	for _, s2 := range s {
-		if len(s2) > max {
-			max = len(s2)
+//Заполнение пустых элементов (дублирование)
+func RepeatFunc(array []string) []string {
+	flag := false
+	for _, s := range array {
+		if s != "" {
+			flag = true
 		}
 	}
-	return s[max]
+	if flag {
+		for i := 1; i < len(array); i++ {
+			if array[i] == "" {
+				array[i] = array[i-1]
+			}
+		}
+
+		for i := len(array) - 1; i > 0; i-- {
+			if array[i] == "" {
+				array[i] = array[i+1]
+			}
+		}
+	}
+	return array
+}
+
+//Возвращает самую длинную строку
+func LongestString(s []string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	max := 0
+	result := 0
+	for i, s2 := range s {
+		if len(s2) > max {
+			max = len(s2)
+			result = i
+		}
+	}
+	return s[result]
 }
