@@ -11,14 +11,14 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 	//несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
 	var lessons []Lesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
-		fmt.Println("ПРЕДМЕТ:")
-		fmt.Println(subject)
-		fmt.Println("ТИП:")
-		fmt.Println(typeOfLesson)
-		fmt.Println("ФИО:")
-		fmt.Println(teacherName)
-		fmt.Println("КАБИНЕТ:")
-		fmt.Println(cabinet)
+		//fmt.Println("ПРЕДМЕТ:")
+		//fmt.Println(subject)
+		//fmt.Println("ТИП:")
+		//fmt.Println(typeOfLesson)
+		//fmt.Println("ФИО:")
+		//fmt.Println(teacherName)
+		//fmt.Println("КАБИНЕТ:")
+		//fmt.Println(cabinet)
 		if strings.Contains(cabinet, "В-78*\n") || strings.Contains(cabinet, "В-86*\n") || strings.Contains(cabinet, "МП-1*\n") {
 			strings.ReplaceAll(cabinet, "В-78*\n", "В-78* ")
 			strings.ReplaceAll(cabinet, "В-86*\n", "В-86* ")
@@ -28,25 +28,47 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		typesOfLessons := strings.Split(typeOfLesson, "\n")
 		teachersNames := strings.Split(teacherName, "\n")
 		cabinets := strings.Split(cabinet, "\n")
-		max := Max(len(subjects), len(typesOfLessons), len(teachersNames), len(cabinets)) // максимальное число строк в ячейке
-
+		//max := Max(len(subjects), len(typesOfLessons), len(teachersNames), len(cabinets)) // максимальное число строк в ячейке
+		typesOfLessons = RemoveLastEmptyElement(typesOfLessons)
+		teachersNames = RemoveLastEmptyElement(teachersNames)
+		cabinets = RemoveLastEmptyElement(cabinets)
 		if Contains(subjects, "…………………") { // =)
 			for i, s := range subjects {
 				if s == "…………………" {
-					RemoveElement(subjects, i)
+					subjects = RemoveElement(subjects, i)
+				}
+			}
+		}
+		if Contains(subjects, "") {
+			for i, s := range subjects {
+				if s == "" {
+					subjects = RemoveElement(subjects, i)
+				}
+			}
+
+			if Contains(typesOfLessons, "") {
+				for i, s := range typesOfLessons {
+					if s == "" {
+						subjects = RemoveElement(typesOfLessons, i)
+					}
+				}
+			}
+			if Contains(teachersNames, "") {
+				for i, s := range teachersNames {
+					if s == "" {
+						subjects = RemoveElement(teachersNames, i)
+					}
+				}
+			}
+			if Contains(cabinets, "") {
+				for i, s := range cabinets {
+					if s == "" {
+						subjects = RemoveElement(cabinets, i)
+					}
 				}
 			}
 		}
 		subjects, typesOfLessons, teachersNames, cabinets = FixSameSubjectParameters(subjects, typesOfLessons, teachersNames, cabinets)
-
-		for i := 0; i < max; i++ {
-			if len(subjects) != max || len(typesOfLessons) != max || len(teachersNames) != max || len(cabinets) != max {
-				fmt.Println(subjects)
-				fmt.Println(typesOfLessons)
-				fmt.Println(teachersNames)
-				fmt.Println(cabinets)
-			}
-		}
 
 		collection := [][]string{
 			subjects, typesOfLessons, teachersNames, cabinets,
@@ -70,32 +92,54 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 			someLesson.Cabinet = collection[3][i]
 			lessons = append(lessons, someLesson) // массив с уроками "предмет с/без п/г" "тип" "фио" "кабинет"
 		}
-		fmt.Println("Предметы:")
-		for _, s := range subjects {
-			fmt.Println(s)
-		}
-		fmt.Println("Тип занятий")
-		for _, lesson := range typesOfLessons {
-			fmt.Println(lesson)
-		}
-		fmt.Println("ФИО")
-		for _, teachersName := range teachersNames {
-			fmt.Println(teachersName)
-		}
-		fmt.Println("Кабинет")
-		for _, s := range cabinets {
-			fmt.Println(s)
-
-		}
+		//b := len(subjects)
+		//if (b != len(typesOfLessons)) || (b!= len(teachersNames)) || (b!= len(cabinets)) || (len(typesOfLessons) != len(teachersNames)) || (len(typesOfLessons) != len(cabinets)) || (len(teachersNames) != len(cabinets)) {
+		//	fmt.Println("Предметы:")
+		//	for _, s := range subjects {
+		//		fmt.Println(s)
+		//	}
+		//	fmt.Println("Тип занятий")
+		//	for _, lesson := range typesOfLessons {
+		//		fmt.Println(lesson)
+		//	}
+		//	fmt.Println("ФИО")
+		//	for _, teachersName := range teachersNames {
+		//		fmt.Println(teachersName)
+		//	}
+		//	fmt.Println("Кабинет")
+		//	for _, s := range cabinets {
+		//		fmt.Println(s)
+		//
+		//	}
+		//}
 
 	} else { // в строке нет энтеров
+		if !strings.Contains(subject, "яз") { // надо где языки то что возможно запарсить а то что нет так кинуть в урок
+			fmt.Println("Предметы:")
+			fmt.Println(subject)
+			fmt.Println("Тип занятий")
+			fmt.Println(typeOfLesson)
+			fmt.Println("ФИО")
+			fmt.Println(teacherName)
+			fmt.Println("Кабинет")
+			fmt.Println(cabinet)
+		} else { // надо парсить одиночные строки желательно бы начать с тех строк где несколько предметов и разелить их как-то
 
+		}
 	}
 	return lessons
 }
 
 func SortDataBySubgroup(subjects, typesOfLesson, teachersName, cabinets []string) {
 
+}
+
+//Удаляет последний пустой элемент
+func RemoveLastEmptyElement(array []string) []string {
+	if array[len(array)-1] == "" {
+		array = RemoveElement(array, len(array)-1)
+	}
+	return array
 }
 
 func Max(number ...int) int {
