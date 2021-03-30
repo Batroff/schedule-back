@@ -81,22 +81,14 @@ func (g Group) AddLesson(lessons []Lesson) {
 		}
 	}
 }
-func (l Lesson) FillInWeeks(flag bool, week string) {
-	if flag && strings.Contains(week, "II") {
+func (l Lesson) FillInWeeks(week string) {
+	if strings.Contains(week, "II") {
 		for i := 1; i < len(l.OccurrenceLesson)-1; i += 2 {
 			l.OccurrenceLesson[i] = true
 		}
-	} else if flag && strings.Contains(week, "I") {
+	} else if strings.Contains(week, "I") {
 		for i := 0; i < len(l.OccurrenceLesson)-1; i += 2 {
 			l.OccurrenceLesson[i] = true
-		}
-	} else if !flag && strings.Contains(week, "II") {
-		for i := 1; i < len(l.OccurrenceLesson)-1; i += 2 {
-			l.OccurrenceLesson[i] = false
-		}
-	} else if !flag && strings.Contains(week, "I") {
-		for i := 0; i < len(l.OccurrenceLesson)-1; i += 2 {
-			l.OccurrenceLesson[i] = false
 		}
 	}
 }
