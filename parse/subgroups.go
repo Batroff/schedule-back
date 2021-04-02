@@ -52,8 +52,10 @@ var CrutchRegexp7 = regexp.MustCompile(`((\d{1,2},? ?)н ?- ?\d ?гр,? ?)+ *([�
 var CrutchRegexp7Subgroup = regexp.MustCompile(`(\d{1,2},?)+ *н? *- *\d *гр,? *`)
 var CrutchRegexp7Mini = regexp.MustCompile(`\d *гр`)
 
+var SubgroupNumber = 0
+
 //несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
-func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) (resultLessons []Lesson, number int) {
+func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) (resultLessons []Lesson) {
 	var lessons []Lesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
 		lessons = LessonToLessons(subject, typeOfLesson, teacherName, cabinet)
@@ -68,7 +70,10 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 			//fmt.Println(lesson.TeacherName)
 			//fmt.Println("Кабинет:")
 			//fmt.Println(lesson.Cabinet)
-			SubgroupLessonParse(&[]Lesson{lesson})
+			//SubgroupLessonParse(&[]Lesson{lesson})
+			if lesson.Exists {
+
+			}
 		}
 	} else { // в строке нет энтеров
 		lesson := NewLesson()
@@ -79,12 +84,16 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		SubgroupLessonsSort(&([]Lesson{lesson}))
 		//SubgroupLessonParse(&lesson)
 	}
-	return lessons, 1
+	return lessons
 }
 
-func SubgroupLessonParse(lesson *[]Lesson) []Lesson {
-
-	return []Lesson{NewLesson()}
+func SubgroupLessonParse(lesson *Lesson, subgroupNumber int) Lesson {
+	if SubgroupNumber != subgroupNumber {
+		lesson.Exists = false
+	} else {
+		//парс через методы обычного парса
+	}
+	return NewLesson()
 }
 
 func SubgroupLessonsSort(lessons *[]Lesson) {

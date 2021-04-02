@@ -43,6 +43,7 @@ func DownloadFile(filepath string, url string) error {
 }
 
 func Parse() {
+	count := 0
 	links := []string{
 		"https://webservices.mirea.ru/upload/iblock/2c3/%D0%A4%D0%A2%D0%98_1%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx",
 		"https://webservices.mirea.ru/upload/iblock/f03/%D0%A4%D0%A2%D0%98_2%D0%BA_20-21_%D0%B2%D0%B5%D1%81%D0%BD%D0%B0.xlsx",
@@ -89,8 +90,10 @@ func Parse() {
 		"https://webservices.mirea.ru/upload/iblock/db2/%D0%97_4_%D0%BA%D1%83%D1%80%D1%81_%D0%A0%D0%A2%D0%A3_%D0%9C%D0%98%D0%A0%D0%AD%D0%90_(%D0%B2%D0%B5%D1%81%D0%BD%D0%B0).xlsx",
 		"https://webservices.mirea.ru/upload/iblock/6b4/%D0%97%205%20%D0%BA%D1%83%D1%80%D1%81%20%D0%A0%D0%A2%D0%A3%20%D0%9C%D0%98%D0%A0%D0%AD%D0%90%20(%D0%B2%D0%B5%D1%81%D0%BD%D0%B0)..xlsx",
 	} //массив с ссылками на excel файлы
+	regexpGroupNumber := regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
 	for i, link := range links {
 		path := "C:/Excel/" + strconv.Itoa(i) + ".xlsx"
+		defer fmt.Println(path)
 		//err := DownloadFile(path, link)
 		//if err != nil {
 		//	panic(err)
@@ -110,28 +113,52 @@ func Parse() {
 			if rowInfo == -1 {                                  // Чек на пустую страницу excel
 				continue
 			}
+			for table[rowInfo][colInfo] == table[rowInfo][colInfo+1] { //фикс скрытого A столбика в ТХТ
+				colInfo++
+			}
 			rowInfo += 2
 			stringsUnique := make([]string, len(table))
-			rowsTable := GetRows(table)
+			rowsTable := GetRows(table) // количество строк
 			for rowGroup, strings := range table {
 				for colGroup, s := range strings {
-					regexpGroupNumber := regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
+
 					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(stringsUnique, regexpGroupNumber.FindString(s)) {
 						stringsUnique = append(stringsUnique, regexpGroupNumber.FindString(s))
-						GetGroup(table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+						count++
+						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
+							SubgroupNumber = 1
+							GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+							SubgroupNumber = 2
+							GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+						}
+						// наверное прямо здесь можно в базу кидать группы
+						SubgroupNumber = 0
 					}
 				}
 			}
 		}
 	}
+	fmt.Println(count)
 }
 
-func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
-	group := structure.NewGroup()
+var SubgroupRegexp = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
+
+func CheckSubgroups(table *[][]string, colGroup int, rowInfo int, rows int) bool {
 	for i := rowInfo; i < rows; i++ {
-		if regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)[^А-Яа-я]").MatchString(table[i][colGroup]) { //проверка на подгруппы
+		if SubgroupRegexp.MatchString((*table)[i][colGroup]) {
+			return true
+		}
+	}
+	return false
+}
+
+func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
+	result := structure.NewGroup()
+	var lessons []structure.Lesson
+	for i := rowInfo; i < rows; i++ {
+		if SubgroupRegexp.MatchString((*table)[i][colGroup]) { //проверка на подгруппы
 			//if str.Contains(table[i][colGroup], "гр") || str.Contains(table[i][colGroup], "п/г") {
-			//	fmt.Println(table[i][colGroup]) //предмет
+			//	fmt.Println(table[i][colGroup])   //предмет
 			//	fmt.Println(table[i][colGroup+1]) //вид занятия
 			//	fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
 			//	fmt.Println(table[i][colGroup+3]) //№ аудитории
@@ -139,7 +166,7 @@ func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo
 			//	fmt.Println(table[i][colInfo+1])  //№пары
 			//	fmt.Println(table[i][colInfo+4])  //Неделя
 			//	fmt.Println("-------------------------------------------------")
-			SubGroupParse(table[i][colGroup], table[i][colGroup+1], table[i][colGroup+2], table[i][colGroup+3], table[i][colInfo], table[i][colInfo+1], table[i][colInfo])
+			lessons = SubGroupParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
 		}
 		//table[i][colGroup])   //предмет
 		//table[i][colGroup+1] //вид занятия
@@ -149,10 +176,10 @@ func GetGroup(table [][]string, rowGroup int, colGroup int, colInfo int, rowInfo
 		//table[i][colInfo+1]  //№пары
 		//table[i][colInfo+4]  //Неделя
 		//надо из этих 4 данных получать несколько уроков.
-		//lessons := //ParseIKBSP(table[i][colGroup], table[i][colGroup+1], table[i][colGroup+2], table[i][colGroup+3], table[i][colInfo], table[i][colInfo+1], table[i][colInfo+4])
-		//group.AddLesson(lessons)
+		//lessons = //ParseIKBSP(table[i][colGroup], table[i][colGroup+1], table[i][colGroup+2], table[i][colGroup+3], table[i][colInfo], table[i][colInfo+1], table[i][colInfo+4])
+		result.AddLesson(lessons)
 	}
-	return group
+	return result
 }
 
 func GetRows(table [][]string) int { //количество строк в таблице
