@@ -11,15 +11,22 @@ import (
 func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
 	if subject != "" {
-		//fmt.Println(subject)
+
 		a, b, c, d := countBalance(SlashManage(SeparateLessons(subject), SeparateTeachers(teacherName), SeparateCabinets(cabinet), SeparateCabinets(typeOfLesson)))
+		for i := range a {
+			TruncateWeekNumbers(&a[i])
+		}
 		lessons := lessonBuilder(week, &a, &b, &c, &d)
 		for i := range lessons {
 			lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
 			lessons[i].DayOfWeek = dayOfWeek
 			lessons[i].SubGroup = 0
 			lessons[i].Exists = true
-			fmt.Println(lessons[i])
+			if strings.Contains(subject, "подгр") {
+				fmt.Println("исходная пара: ")
+				fmt.Println(subject)
+				fmt.Println(lessons[i])
+			}
 		}
 		return lessons
 	}
@@ -48,8 +55,8 @@ func numbersPresent(subject string) []int { // Возвращает номера
 	subject = strings.ReplaceAll(subject, "кр", "")
 	subject = strings.ReplaceAll(subject, ", ", ",")
 	subject = strings.ReplaceAll(subject, " ,", ",")
-	if NumbersIndex(subject)[0] > -1 {
-		for _, v := range orSplit(subject[NumbersIndex(subject)[0]:NumbersIndex(subject)[1]]) {
+	if DefaultRegexpNumbersIndex(subject)[0] > -1 {
+		for _, v := range orSplit(subject[DefaultRegexpNumbersIndex(subject)[0]:DefaultRegexpNumbersIndex(subject)[1]]) {
 			if strings.Contains(v, "-") {
 				a, _ := strconv.Atoi(v[0:strings.Index(v, "-")])
 				b, _ := strconv.Atoi(v[strings.Index(v, "-")+1:])
@@ -118,9 +125,25 @@ func SeparateLessons(line string) []string {
 	SlashFix(&lessons)
 	return lessons
 }
-func NumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку
+func DefaultRegexpNumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку
 	if regexp.MustCompile("(кр[ ])?((((\\d{2}|\\d)( *[ \\-,] *)){1,17}(\\d{2}|\\d))|(\\d{2}|\\d))").FindStringIndex(line) != nil {
 		return regexp.MustCompile("(кр[ ])?((((\\d{2}|\\d)( *[ \\-,] *)){1,17}(\\d{2}|\\d))|(\\d{2}|\\d))").FindStringIndex(line)
+	} else {
+		return []int{-1000, -1000}
+	}
+}
+func NumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку с
+	if regexp.MustCompile("\\((((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+((нед\\.\\))|(нед\\)))").FindStringIndex(line) != nil {
+		return regexp.MustCompile("\\((((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+((нед\\.\\))|(нед\\)))").FindStringIndex(line)
+	}
+	if regexp.MustCompile("((\\d{2}|\\d)-(\\d{2}|\\d)) нед\\.").FindStringIndex(line) != nil {
+		return regexp.MustCompile("((\\d{2}|\\d)-(\\d{2}|\\d)) нед\\.").FindStringIndex(line)
+	}
+	if regexp.MustCompile("(\\d{2}|\\d)-(\\d{2}|\\d) нед").FindStringIndex(line) != nil {
+		return regexp.MustCompile("(\\d{2}|\\d)-(\\d{2}|\\d) нед").FindStringIndex(line)
+	}
+	if regexp.MustCompile("((кр\\.[ ]*)|(кр[ ]*))?(((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+(((\\d{2}|\\d))|(\\d{2}|\\d)|([ ]*н\\.)|([ ]*н ))").FindStringIndex(line) != nil {
+		return regexp.MustCompile("((кр\\.[ ]*)|(кр[ ]*))?(((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+(((\\d{2}|\\d))|(\\d{2}|\\d)|([ ]*н\\.)|([ ]*н ))").FindStringIndex(line)
 	} else {
 		return []int{-1000, -1000}
 	}
@@ -128,16 +151,16 @@ func NumbersIndex(line string) []int { //Возвращает начальный
 func HasNextNumbers(line string) int {
 	line = strings.ReplaceAll(line, ".", ",")
 	count := len(line)
-	if NumbersIndex(line)[0] != -1000 {
-		line = line[NumbersIndex(line)[1]:len(line)]
+	if DefaultRegexpNumbersIndex(line)[0] != -1000 {
+		line = line[DefaultRegexpNumbersIndex(line)[1]:len(line)]
 		count -= len(line)
-		return NumbersIndex(line)[0] + count
+		return DefaultRegexpNumbersIndex(line)[0] + count
 	} else {
 		return -1
 	}
 }
 func FillingInOccurrenceLesson(flag bool, week string, someLesson Lesson, line string) {
-	if NumbersIndex(line)[1] < 0 {
+	if DefaultRegexpNumbersIndex(line)[1] < 0 {
 		someLesson.FillInWeeks(week)
 	} else {
 		for _, v := range numbersPresent(line) {
@@ -260,9 +283,9 @@ func SlashManage(lessons, teachers, cabinets, types []string) ([]string, []strin
 }
 func SliceSlashManage(i int, slice *[]string) { // Разбивает элементы слайса по слешам
 	partBefore := ""
-	if HasNextNumbers((*slice)[i]) < 0 && NumbersIndex((*slice)[i])[0] > 0 && !strings.Contains((*slice)[i], "-") {
-		partBefore = (*slice)[i][0 : NumbersIndex((*slice)[i])[1]+4] // часть с кроме или номерами недель
-		(*slice)[i] = (*slice)[i][NumbersIndex((*slice)[i])[1]+4:]
+	if HasNextNumbers((*slice)[i]) < 0 && DefaultRegexpNumbersIndex((*slice)[i])[0] > 0 && !strings.Contains((*slice)[i], "-") {
+		partBefore = (*slice)[i][0 : DefaultRegexpNumbersIndex((*slice)[i])[1]+4] // часть с кроме или номерами недель
+		(*slice)[i] = (*slice)[i][DefaultRegexpNumbersIndex((*slice)[i])[1]+4:]
 	}
 	if regexp.MustCompile("[А-Яа-я]{1,100} [А-Я].[А-Я].\\/$").MatchString((*slice)[i]) { // костыль на случай препод/\n препод/препод
 		(*slice)[i] = partBefore + (*slice)[i][0:strings.Index((*slice)[i], "/")]
@@ -307,4 +330,18 @@ func balanceSlices(lessons, teachers []string) ([]string, []string) { // бал�
 		teachers = append(teachers, teachers[0])
 	}
 	return lessons, teachers
+}
+func TruncateWeekNumbers(lesson *string) {
+	//if regexp.MustCompile(" *$").FindStringIndex(*lesson) != nil {
+	//	{
+	//		*lesson = (*lesson)[:regexp.MustCompile(" *$").FindStringIndex(*lesson)[0]]
+	//	}
+
+	if NumbersIndex(*lesson)[1] > 0 {
+		if len(*lesson) == NumbersIndex(*lesson)[1] {
+			*lesson = (*lesson)[:NumbersIndex(*lesson)[0]]
+		} else {
+			*lesson = (*lesson)[NumbersIndex(*lesson)[1]:]
+		}
+	}
 }
