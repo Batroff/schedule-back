@@ -8,17 +8,25 @@ import (
 	"strings"
 )
 
-func ParseIKBSP(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
+func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
 	if subject != "" {
-		fmt.Println(subject)
+		//fmt.Println(subject)
 		a, b, c, d := countBalance(SlashManage(SeparateLessons(subject), SeparateTeachers(teacherName), SeparateCabinets(cabinet), SeparateCabinets(typeOfLesson)))
-		for _, v := range lessonBuilder(week, &a, &b, &c, &d) {
-			fmt.Println(v)
+		lessons := lessonBuilder(week, &a, &b, &c, &d)
+		for i := range lessons {
+			lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
+			lessons[i].DayOfWeek = dayOfWeek
+			lessons[i].SubGroup = 0
+			lessons[i].Exists = true
+			fmt.Println(lessons[i])
 		}
+		return lessons
 	}
 
-	return []Lesson{NewLesson(), NewLesson()}
+	return []Lesson{Lesson{
+		Exists: false,
+	}}
 }
 func lessonBuilder(week string, lessons, teachers, cabinets, types *[]string) []Lesson {
 	var someLessons []Lesson

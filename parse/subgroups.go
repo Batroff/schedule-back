@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+	//"fmt"
 	"regexp"
 	. "schedule/structure"
 	"strconv"
@@ -54,9 +55,16 @@ var CrutchRegexp7Mini = regexp.MustCompile(`\d *гр`)
 
 var SubgroupNumber = 0
 
+var GlobalWeek string
+var GlobalDayOfWeek string
+var GlobalNumberLesson string
+
 //несколько уроков в 1 дне надо раскидать по строкам и если одинаковые предметы почему они раскинуты(тип работы/преподы)
 func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) (resultLessons []Lesson) {
 	var lessons []Lesson
+	GlobalWeek = week
+	GlobalDayOfWeek = dayOfWeek
+	GlobalNumberLesson = numberLesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
 		lessons = LessonToLessons(subject, typeOfLesson, teacherName, cabinet)
 		SubgroupLessonsSort(&lessons)
@@ -84,16 +92,31 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		SubgroupLessonsSort(&([]Lesson{lesson}))
 		//SubgroupLessonParse(&lesson)
 	}
+	for i, _ := range lessons {
+		SubgroupLessonParse(&lessons[i])
+		lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
+		lessons[i].DayOfWeek = dayOfWeek
+		//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		//fmt.Println("Предметы:")
+		//fmt.Println((lessons)[i].Subject)
+		//fmt.Println("Тип занятий")
+		//fmt.Println((lessons)[i].TypeOfLesson)
+		//fmt.Println("ФИО")
+		//fmt.Println((lessons)[i].TeacherName)
+		//fmt.Println("Кабинет")
+		//fmt.Println((lessons)[i].Cabinet)
+		fmt.Println(lessons[i])
+
+	}
 	return lessons
 }
 
-func SubgroupLessonParse(lesson *Lesson, subgroupNumber int) Lesson {
-	if SubgroupNumber != subgroupNumber {
-		lesson.Exists = false
+func SubgroupLessonParse(lesson *Lesson) {
+	if SubgroupNumber == lesson.SubGroup || lesson.SubGroup == 0 {
+		lesson.Exists = true
 	} else {
-		//парс через методы обычного парса
+		lesson.Exists = false
 	}
-	return NewLesson()
 }
 
 func SubgroupLessonsSort(lessons *[]Lesson) {
@@ -104,65 +127,66 @@ func SubgroupLessonsSort(lessons *[]Lesson) {
 	}
 	for i, lesson := range *lessons {
 		if !SubgroupRegexp.MatchString(lesson.Subject) {
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println("Предметы:")
-			fmt.Println((*lessons)[i].Subject)
-			fmt.Println("Тип занятий")
-			fmt.Println((*lessons)[i].TypeOfLesson)
-			fmt.Println("ФИО")
-			fmt.Println((*lessons)[i].TeacherName)
-			fmt.Println("Кабинет")
-			fmt.Println((*lessons)[i].Cabinet)
+			(*lessons)[i].SubGroup = 0
+			(*lessons)[i].FillInWeeks(GlobalWeek)
 			// lesson надо отправить в человеческий парс
 		} else if CrutchRegexp3.MatchString(lesson.Subject) || CrutchRegexp3Lite.MatchString(lesson.Subject) { //парс с подгруппами
 			temp := " " + strings.ReplaceAll(strings.ReplaceAll(CrutchRegexp3Mini.FindString(lesson.Subject), "-", ""), " ", "")
 			(*lessons)[i].Subject = strings.ReplaceAll((*lessons)[i].Subject, CrutchRegexp3Mini.FindString(lesson.Subject), "") + temp
+			digit, _ := strconv.Atoi(Digit.FindString(CrutchRegexp3Mini.FindString(lesson.Subject)))
+			(*lessons)[i] = DefaultParse((*lessons)[i].Subject, (*lessons)[i].TypeOfLesson, (*lessons)[i].TeacherName, (*lessons)[i].Cabinet, GlobalDayOfWeek, GlobalNumberLesson, GlobalWeek)[0]
+			(*lessons)[i].SubGroup = digit
 		} else if SubgroupRegexp1.MatchString(lesson.Subject) && !strings.Contains(lesson.Subject, ")/И") {
 			// ~15000 строчек
 			temp := SubgroupRegexp1Subgroup.FindString(lesson.Subject)
 			(*lessons)[i].Subject = strings.ReplaceAll(lesson.Subject, temp, "") // Строка для норм парса
 			digit, _ := strconv.Atoi(Digit.FindString(temp))                     // номер подгруппы
-			digit += 0
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println("Предметы:")
-			fmt.Println((*lessons)[i].Subject)
-			fmt.Println("Тип занятий")
-			fmt.Println((*lessons)[i].TypeOfLesson)
-			fmt.Println("ФИО")
-			fmt.Println((*lessons)[i].TeacherName)
-			fmt.Println("Кабинет")
-			fmt.Println((*lessons)[i].Cabinet)
+			(*lessons)[i] = DefaultParse((*lessons)[i].Subject, (*lessons)[i].TypeOfLesson, (*lessons)[i].TeacherName, (*lessons)[i].Cabinet, GlobalDayOfWeek, GlobalNumberLesson, GlobalWeek)[0]
+			(*lessons)[i].SubGroup = digit
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println("Предметы:")
+			//fmt.Println((*lessons)[i].Subject)
+			//fmt.Println("Тип занятий")
+			//fmt.Println((*lessons)[i].TypeOfLesson)
+			//fmt.Println("ФИО")
+			//fmt.Println((*lessons)[i].TeacherName)
+			//fmt.Println("Кабинет")
+			//fmt.Println((*lessons)[i].Cabinet)
 		} else if SubgroupRegexp2.MatchString(lesson.Subject) {
 			// ~120 строчек
 			temp := SubgroupRegexp2Subgroup.FindString(lesson.Subject)
 			(*lessons)[i].Subject = strings.ReplaceAll(lesson.Subject, temp, "") // Строка для норм парса
 			digit, _ := strconv.Atoi(Digit.FindString(temp))                     // номер подгруппы
-			digit += 0
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println("Предметы:")
-			fmt.Println((*lessons)[i].Subject)
-			fmt.Println("Тип занятий")
-			fmt.Println((*lessons)[i].TypeOfLesson)
-			fmt.Println("ФИО")
-			fmt.Println((*lessons)[i].TeacherName)
-			fmt.Println("Кабинет")
-			fmt.Println((*lessons)[i].Cabinet)
+			(*lessons)[i] = DefaultParse((*lessons)[i].Subject, (*lessons)[i].TypeOfLesson, (*lessons)[i].TeacherName, (*lessons)[i].Cabinet, GlobalDayOfWeek, GlobalNumberLesson, GlobalWeek)[0]
+			(*lessons)[i].SubGroup = digit
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println("Предметы:")
+			//fmt.Println((*lessons)[i].Subject)
+			//fmt.Println("Тип занятий")
+			//fmt.Println((*lessons)[i].TypeOfLesson)
+			//fmt.Println("ФИО")
+			//fmt.Println((*lessons)[i].TeacherName)
+			//fmt.Println("Кабинет")
+			//fmt.Println((*lessons)[i].Cabinet)
 		} else if SubgroupRegexp3.MatchString(lesson.Subject) {
 			// ~76 строчек
 			temp := SubgroupRegexp3Subgroup.FindString(lesson.Subject)
 			(*lessons)[i].Subject = strings.ReplaceAll(lesson.Subject, temp, "") // Строка для норм парса
 			digit, _ := strconv.Atoi(Digit.FindString(temp))                     // номер подгруппы
-			digit += 0
-			fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			fmt.Println("Предметы:")
-			fmt.Println((*lessons)[i].Subject)
-			fmt.Println("Тип занятий")
-			fmt.Println((*lessons)[i].TypeOfLesson)
-			fmt.Println("ФИО")
-			fmt.Println((*lessons)[i].TeacherName)
-			fmt.Println("Кабинет")
-			fmt.Println((*lessons)[i].Cabinet)
+			(*lessons)[i] = DefaultParse((*lessons)[i].Subject, (*lessons)[i].TypeOfLesson, (*lessons)[i].TeacherName, (*lessons)[i].Cabinet, GlobalDayOfWeek, GlobalNumberLesson, GlobalWeek)[0]
+			(*lessons)[i].SubGroup = digit
+			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//fmt.Println("Предметы:")
+			//fmt.Println((*lessons)[i].Subject)
+			//fmt.Println("Тип занятий")
+			//fmt.Println((*lessons)[i].TypeOfLesson)
+			//fmt.Println("ФИО")
+			//fmt.Println((*lessons)[i].TeacherName)
+			//fmt.Println("Кабинет")
+			//fmt.Println((*lessons)[i].Cabinet)
 		} else {
+			(*lessons)[i].SubGroup = 0
+			(*lessons)[i].FillInWeeks(GlobalWeek)
 			//как есть так и есть нормально не запарсить и возможно и не стоит парсить
 			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 			//fmt.Println("Предметы:")
@@ -278,7 +302,6 @@ func Fix(lesson Lesson) (lesson1, lesson2 Lesson) {
 		lesson1.TeacherName = lesson.TeacherName
 		lesson2.TeacherName = lesson.TeacherName
 	} else if CrutchRegexp7.MatchString(lesson.Subject) {
-		fmt.Println(lesson.Subject)
 		subgroups := CrutchRegexp7Subgroup.FindAllString(lesson.Subject, -1)
 		subject := lesson.Subject
 		for _, subgroup := range subgroups {
@@ -295,8 +318,6 @@ func Fix(lesson Lesson) (lesson1, lesson2 Lesson) {
 		lesson2.TypeOfLesson = lesson.TypeOfLesson
 		lesson1.TeacherName = lesson.TeacherName
 		lesson2.TeacherName = lesson.TeacherName
-		fmt.Println(lesson1.Subject)
-		fmt.Println(lesson2.Subject)
 	}
 	return lesson1, lesson2
 }
@@ -385,10 +406,7 @@ func LessonToLessons(subject, typeOfLesson, teacherName, cabinet string) []Lesso
 //Функция для случаев где предметов меньше чем других параметров и дублирует все лишние параметры в одной строке разделяя их вопросом
 func parameterConversion(subjects, array *[]string) {
 	if len(*subjects) < len(*array) {
-		var sum string
-		for _, s := range *array {
-			sum = sum + s + " ? "
-		}
+		sum := strings.Join(*array, " ? ")
 		*array = make([]string, len(*subjects))
 		for i := range *array {
 			(*array)[i] = sum

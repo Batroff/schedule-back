@@ -21,47 +21,47 @@ type Lesson struct {
 	//occurrenceLesson []int//номера недель в которых присутствует эта пара
 	OccurrenceLesson []bool //номера недель в которых присутствует эта пара
 	Exists           bool   //для пустых пар??
-	//SubGroup         int    // номер подгруппы
+	SubGroup         int    // номер подгруппы
 
 }
 
 type Day struct {
-	lessons []Lesson
+	Lessons []Lesson
 }
 
 type Week struct {
-	days []Day
+	Days []Day
 }
 
 type Group struct {
-	weeks    []Week
-	name     string
-	subGroup int // номер подгруппы
+	Weeks    []Week
+	Name     string
+	SubGroup int // номер подгруппы
 }
 
 func NewGroup() Group {
 	var g Group
-	g.weeks = make([]Week, 17)
-	for i := range g.weeks {
-		g.weeks[i] = NewWeek()
+	g.Weeks = make([]Week, 17)
+	for i := range g.Weeks {
+		g.Weeks[i] = NewWeek()
 	}
 	return g
 }
 
 func NewWeek() Week {
 	var w Week
-	w.days = make([]Day, 6)
-	for i := range w.days {
-		w.days[i] = NewDay()
+	w.Days = make([]Day, 6)
+	for i := range w.Days {
+		w.Days[i] = NewDay()
 	}
 	return w
 }
 
 func NewDay() Day {
 	var d Day
-	d.lessons = make([]Lesson, 8)
-	for i := range d.lessons {
-		d.lessons[i] = NewLesson()
+	d.Lessons = make([]Lesson, 9)
+	for i := range d.Lessons {
+		d.Lessons[i] = NewLesson()
 	}
 	return d
 }
@@ -76,7 +76,7 @@ func (g Group) AddLesson(lessons []Lesson) {
 	for _, lesson := range lessons {
 		for i2, b := range lesson.OccurrenceLesson {
 			if b {
-				g.weeks[i2].days[weeksMap[lesson.DayOfWeek]].lessons[lesson.NumberLesson] = lesson
+				g.Weeks[i2].Days[weeksMap[lesson.DayOfWeek]].Lessons[lesson.NumberLesson] = lesson
 			}
 		}
 	}
