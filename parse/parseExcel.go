@@ -149,6 +149,17 @@ func Parse() []structure.Group {
 			}
 		}
 	}
+	for _, v := range groups {
+		if str.Contains(v.Name, "БСБО-05-19") {
+			for _, week := range v.Weeks {
+				for _, day := range week.Days {
+					for _, lesson := range day.Lessons {
+						fmt.Println(lesson)
+					}
+				}
+			}
+		}
+	}
 	fmt.Println("Кол-во групп")
 	fmt.Println(count)
 	return groups
@@ -187,6 +198,7 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 			//}
 			result.AddLesson(lessons)
 		} else {
+
 			lessons = DefaultParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
 			//for _, lesson := range lessons {
 			//	if lesson.Exists {

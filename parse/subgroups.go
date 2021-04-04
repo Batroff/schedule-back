@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	//"fmt"
 	"regexp"
 	. "schedule/structure"
@@ -105,7 +104,6 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		//fmt.Println((lessons)[i].TeacherName)
 		//fmt.Println("Кабинет")
 		//fmt.Println((lessons)[i].Cabinet)
-		fmt.Println(lessons[i])
 
 	}
 	return lessons
@@ -130,7 +128,7 @@ func SubgroupLessonsSort(lessons *[]Lesson) {
 			(*lessons)[i].SubGroup = 0
 			(*lessons)[i].FillInWeeks(GlobalWeek)
 			// lesson надо отправить в человеческий парс
-		} else if CrutchRegexp3.MatchString(lesson.Subject) || CrutchRegexp3Lite.MatchString(lesson.Subject) { //парс с подгруппами
+		} else if CrutchRegexp3.MatchString(lesson.Subject) && CrutchRegexp3Lite.MatchString(lesson.Subject) { //парс с подгруппами
 			temp := " " + strings.ReplaceAll(strings.ReplaceAll(CrutchRegexp3Mini.FindString(lesson.Subject), "-", ""), " ", "")
 			(*lessons)[i].Subject = strings.ReplaceAll((*lessons)[i].Subject, CrutchRegexp3Mini.FindString(lesson.Subject), "") + temp
 			digit, _ := strconv.Atoi(Digit.FindString(CrutchRegexp3Mini.FindString(lesson.Subject)))
@@ -169,10 +167,12 @@ func SubgroupLessonsSort(lessons *[]Lesson) {
 			//fmt.Println("Кабинет")
 			//fmt.Println((*lessons)[i].Cabinet)
 		} else if SubgroupRegexp3.MatchString(lesson.Subject) {
+			//fmt.Println((*lessons)[i].Subject)
 			// ~76 строчек
 			temp := SubgroupRegexp3Subgroup.FindString(lesson.Subject)
 			(*lessons)[i].Subject = strings.ReplaceAll(lesson.Subject, temp, "") // Строка для норм парса
 			digit, _ := strconv.Atoi(Digit.FindString(temp))                     // номер подгруппы
+			//fmt.Println((*lessons)[i].Subject)
 			(*lessons)[i] = DefaultParse((*lessons)[i].Subject, (*lessons)[i].TypeOfLesson, (*lessons)[i].TeacherName, (*lessons)[i].Cabinet, GlobalDayOfWeek, GlobalNumberLesson, GlobalWeek)[0]
 			(*lessons)[i].SubGroup = digit
 			//fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")

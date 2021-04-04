@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"regexp"
 	. "schedule/structure"
 	"strconv"
@@ -11,22 +10,16 @@ import (
 func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
 	if subject != "" {
-
+		//fmt.Println("исходная пара: ")
+		//fmt.Println(subject)
 		a, b, c, d := countBalance(SlashManage(SeparateLessons(subject), SeparateTeachers(teacherName), SeparateCabinets(cabinet), SeparateCabinets(typeOfLesson)))
-		for i := range a {
-			TruncateWeekNumbers(&a[i])
-		}
 		lessons := lessonBuilder(week, &a, &b, &c, &d)
 		for i := range lessons {
 			lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
 			lessons[i].DayOfWeek = dayOfWeek
 			lessons[i].SubGroup = 0
 			lessons[i].Exists = true
-			if strings.Contains(subject, "подгр") {
-				fmt.Println("исходная пара: ")
-				fmt.Println(subject)
-				fmt.Println(lessons[i])
-			}
+			//fmt.Println(lessons[i])
 		}
 		return lessons
 	}
@@ -41,7 +34,7 @@ func lessonBuilder(week string, lessons, teachers, cabinets, types *[]string) []
 		someLesson := NewLesson()
 		flag := exceptFlag(v)
 		FillingInOccurrenceLesson(flag, week, someLesson, v)
-		someLesson.Subject = v
+		someLesson.Subject = TruncateWeekNumbers(v)
 		someLesson.TeacherName = (*teachers)[i]
 		someLesson.Cabinet = (*cabinets)[i]
 		someLesson.TypeOfLesson = (*types)[i]
@@ -166,15 +159,16 @@ func FillingInOccurrenceLesson(flag bool, week string, someLesson Lesson, line s
 		for _, v := range numbersPresent(line) {
 			if flag {
 				someLesson.FillInWeeks(week)
-			}
-			if flag && week == "II" && (v-1)%2 != 0 {
-				someLesson.OccurrenceLesson[v-1] = false
-			} else if flag && week == "I" && (v-1)%2 == 0 {
-				someLesson.OccurrenceLesson[v-1] = false
-			} else if !flag && week == "II" && (v-1)%2 != 0 {
-				someLesson.OccurrenceLesson[v-1] = true
-			} else if !flag && week == "I" && (v-1)%2 == 0 {
-				someLesson.OccurrenceLesson[v-1] = true
+			} else {
+				if flag && week == "II" && (v-1)%2 != 0 {
+					someLesson.OccurrenceLesson[v-1] = false
+				} else if flag && week == "I" && (v-1)%2 == 0 {
+					someLesson.OccurrenceLesson[v-1] = false
+				} else if !flag && week == "II" && (v-1)%2 != 0 {
+					someLesson.OccurrenceLesson[v-1] = true
+				} else if !flag && week == "I" && (v-1)%2 == 0 {
+					someLesson.OccurrenceLesson[v-1] = true
+				}
 			}
 		}
 	}
@@ -331,17 +325,18 @@ func balanceSlices(lessons, teachers []string) ([]string, []string) { // бал�
 	}
 	return lessons, teachers
 }
-func TruncateWeekNumbers(lesson *string) {
+func TruncateWeekNumbers(lesson string) string {
 	//if regexp.MustCompile(" *$").FindStringIndex(*lesson) != nil {
 	//	{
 	//		*lesson = (*lesson)[:regexp.MustCompile(" *$").FindStringIndex(*lesson)[0]]
 	//	}
 
-	if NumbersIndex(*lesson)[1] > 0 {
-		if len(*lesson) == NumbersIndex(*lesson)[1] {
-			*lesson = (*lesson)[:NumbersIndex(*lesson)[0]]
+	if NumbersIndex(lesson)[1] > 0 {
+		if len(lesson) == NumbersIndex(lesson)[1] {
+			lesson = (lesson)[:NumbersIndex(lesson)[0]]
 		} else {
-			*lesson = (*lesson)[NumbersIndex(*lesson)[1]:]
+			lesson = (lesson)[NumbersIndex(lesson)[1]:]
 		}
 	}
+	return lesson
 }
