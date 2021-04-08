@@ -1,11 +1,9 @@
 package main
 
-import (
-	"log"
-	"net/http"
-)
+import "schedule/parse"
 
 func main() {
-	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	parse.Parse()
+	//http.HandleFunc("/", handler)
+	//log.Fatal(http.ListenAndServe(":8080", nil))
 }
