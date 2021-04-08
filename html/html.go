@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"schedule/download"
 	"strings"
 )
@@ -60,9 +61,12 @@ func Parse() map[int][]string {
 }
 
 /* Check if node attribute(key) contains substring(value) */
-func attrValueContains(node *html.Node, key string, value string) bool {
+func attrValueContains(node *html.Node, key string, regexp *regexp.Regexp) bool {
 	for _, attr := range node.Attr {
-		if attr.Key == key && strings.Contains(attr.Val, value) {
+		//if attr.Key == key && strings.Contains(attr.Val, value.) {
+		//	return true
+		//}
+		if attr.Key == key && regexp.MatchString(attr.Val) {
 			return true
 		}
 	}
@@ -166,7 +170,11 @@ func getLinkNodes(ul *html.Node) map[int][]string {
 	var find func(node *html.Node)
 	find = func(node *html.Node) {
 		if node.Type == html.ElementNode && node.Data == "a" && len(node.Attr) != 0 {
-			if attrValueContains(node, "href", "https://webservices.mirea.ru/upload/") {
+			if attrValueContains(node, "href", regexp.MustCompile("зач|экз|сессия")) {
+				return
+			}
+
+			if attrValueContains(node, "href", regexp.MustCompile("https://webservices.mirea.ru/upload/")) {
 				instituteLinks = append(instituteLinks, getAttrValue(node, "href"))
 			}
 
@@ -179,7 +187,9 @@ func getLinkNodes(ul *html.Node) map[int][]string {
 	}
 
 	allLinks := make(map[int][]string, 5)
-	/* Find in each <li> tag */
+	/* Find in each <li> tag
+	* Бакалавриат, магистратура, ...
+	 */
 	for index, child := 0, ul.FirstChild; child != nil; child = child.NextSibling {
 		instituteLinks = []string{}
 		if child.Type == html.ElementNode && child.Data == "li" {
