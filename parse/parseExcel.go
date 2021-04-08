@@ -3,6 +3,7 @@ package parse
 import (
 	"fmt"
 	"github.com/plandem/xlsx"
+	"log"
 	"regexp"
 	"schedule/download"
 	"schedule/html"
@@ -23,9 +24,13 @@ func Contains(strings []string, s string) bool {
 func Parse() []structure.Group {
 	var count int
 	var groups []structure.Group
-	links := html.Parse()[0]
+	links, err := html.Parse()
+	if err != nil {
+		log.Panicf("Error occured while html parsing. %v", err)
+	}
+
 	regexpGroupNumber := regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
-	for i, link := range links {
+	for i, link := range links[0] {
 		path := "C:/Excel/" + strconv.Itoa(i) + ".xlsx"
 		defer fmt.Println(path)
 		err := download.GetFile(path, link)
@@ -76,17 +81,6 @@ func Parse() []structure.Group {
 							groups = append(groups, group)
 						}
 						SubgroupNumber = 0
-					}
-				}
-			}
-		}
-	}
-	for _, v := range groups {
-		if str.Contains(v.Name, "БСБО-05-19") {
-			for _, week := range v.Weeks {
-				for _, day := range week.Days {
-					for _, lesson := range day.Lessons {
-						fmt.Println(lesson)
 					}
 				}
 			}
