@@ -26,17 +26,23 @@ type NodeParams struct {
 3 - Колледж;
 4 - Экстерн;
 */
-func Parse() map[int][]string {
+
+// TODO: add catching exceptions
+func Parse() (map[int][]string, error) {
 	const filepath string = "schedule.html"
 
 	downloadErr := download.GetFile(filepath, "https://www.mirea.ru/schedule/")
 	if downloadErr != nil {
 		log.Panicf("Download error: %v", downloadErr)
+
+		return nil, downloadErr
 	}
 
 	dat, readFileErr := ioutil.ReadFile(filepath)
 	if readFileErr != nil {
 		log.Panicf("Reading file error: %v", readFileErr)
+
+		return nil, readFileErr
 	}
 
 	document, htmlParseErr := html.Parse(strings.NewReader(string(dat)))
@@ -55,9 +61,11 @@ func Parse() map[int][]string {
 	removeFileErr := os.Remove(filepath)
 	if removeFileErr != nil {
 		log.Panicf("Removing file error: %v", removeFileErr)
+
+		return nil, removeFileErr
 	}
 
-	return links
+	return links, nil
 }
 
 /* Check if node attribute(key) contains substring(value) */
