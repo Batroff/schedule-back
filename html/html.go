@@ -71,10 +71,7 @@ func Parse() (map[int][]string, error) {
 /* Check if node attribute(key) contains substring(value) */
 func attrValueContains(node *html.Node, key string, regexp *regexp.Regexp) bool {
 	for _, attr := range node.Attr {
-		//if attr.Key == key && strings.Contains(attr.Val, value.) {
-		//	return true
-		//}
-		if attr.Key == key && regexp.MatchString(attr.Val) {
+		if attr.Key == key && regexp.MatchString(strings.ToLower(attr.Val)) {
 			return true
 		}
 	}
@@ -178,7 +175,7 @@ func getLinkNodes(ul *html.Node) map[int][]string {
 	var find func(node *html.Node)
 	find = func(node *html.Node) {
 		if node.Type == html.ElementNode && node.Data == "a" && len(node.Attr) != 0 {
-			if attrValueContains(node, "href", regexp.MustCompile("зач|экз|сессия|ГИА")) {
+			if attrValueContains(node, "href", regexp.MustCompile("зач|экз|сессия|гиа")) {
 				return
 			}
 
