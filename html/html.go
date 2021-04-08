@@ -170,7 +170,7 @@ func getLinkNodes(ul *html.Node) map[int][]string {
 	var find func(node *html.Node)
 	find = func(node *html.Node) {
 		if node.Type == html.ElementNode && node.Data == "a" && len(node.Attr) != 0 {
-			if attrValueContains(node, "href", regexp.MustCompile("зач|экз|сессия")) {
+			if attrValueContains(node, "href", regexp.MustCompile("зач|экз|сессия|ГИА")) {
 				return
 			}
 
