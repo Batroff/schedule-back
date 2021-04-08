@@ -11,6 +11,7 @@ var weeksMap = map[string]int{
 	"СУББОТА":     5,
 }
 
+// TODO: add annotations
 type Lesson struct {
 	Subject      string //название предмета
 	TypeOfLesson string //тип занятия
@@ -20,23 +21,22 @@ type Lesson struct {
 	DayOfWeek    string //день недели
 	//occurrenceLesson []int//номера недель в которых присутствует эта пара
 	OccurrenceLesson []bool //номера недель в которых присутствует эта пара
-	Exists           bool   //для пустых пар??
+	Exists           bool   `json:"exists,omitempty" bson:"exists,omitempty"` //для пустых пар??
 	SubGroup         int    // номер подгруппы
-
 }
 
 type Day struct {
-	Lessons []Lesson
+	Lessons []Lesson `json:"lessons" bson:"lessons"`
 }
 
 type Week struct {
-	Days []Day
+	Days []Day `json:"days" bson:"days"`
 }
 
 type Group struct {
-	Weeks    []Week
-	Name     string
-	SubGroup int // номер подгруппы
+	Weeks    []Week `json:"weeks" bson:"weeks"`
+	Name     string `json:"name" bson:"name"`
+	SubGroup int    `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
 }
 
 func NewGroup() Group {
