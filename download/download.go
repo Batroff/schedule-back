@@ -14,7 +14,6 @@ func GetFile(filepath, url string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
 	// Create the file
 	log.Printf("Create file: %s...", filepath)
@@ -22,10 +21,22 @@ func GetFile(filepath, url string) error {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
 	// Write the body to file
 	log.Printf("Copying to file...")
 	_, err = io.Copy(out, resp.Body)
+
+	defer func() {
+		respErr := resp.Body.Close()
+		if respErr != nil {
+			log.Panicf("Error occured while response closing, %v", respErr)
+		}
+
+		fileErr := out.Close()
+		if fileErr != nil {
+			log.Panicf("Error occured while file closing, %v", fileErr)
+		}
+	}()
+
 	return err
 }
