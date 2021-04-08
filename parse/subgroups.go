@@ -1,8 +1,6 @@
 package parse
 
 import (
-	"fmt"
-	//"fmt"
 	"regexp"
 	. "schedule/structure"
 	"strconv"
@@ -90,14 +88,6 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 		SubgroupLessonParse(&lessons[i])
 		lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
 		lessons[i].DayOfWeek = dayOfWeek
-		fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-		fmt.Println(lessons[i].Subject)
-		fmt.Println(lessons[i].TypeOfLesson)
-		fmt.Println(lessons[i].TeacherName)
-		fmt.Println(lessons[i].Cabinet)
-		fmt.Println(lessons[i].SubGroup)
-		fmt.Println(lessons[i].OccurrenceLesson)
-		fmt.Println(lessons[i].Exists)
 	}
 	return lessons
 }
