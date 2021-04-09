@@ -21,7 +21,7 @@ type Lesson struct {
 	DayOfWeek    string //день недели
 	//occurrenceLesson []int//номера недель в которых присутствует эта пара
 	OccurrenceLesson []bool //номера недель в которых присутствует эта пара
-	Exists           bool   `json:"exists,omitempty" bson:"exists,omitempty"` //для пустых пар??
+	Exists           bool   `json:"exists,omitempty" bson:"exists"` //для пустых пар??
 	SubGroup         int    // номер подгруппы
 }
 
@@ -94,16 +94,16 @@ func (l Lesson) FillInWeeks(week string) {
 }
 
 type GroupMini struct {
-	Days     map[string]Day `json:"days" bson:"days,inline"`
-	Name     string         `json:"name" bson:"name"`
-	SubGroup int            `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
+	Days     map[string][]Lesson `json:"days" bson:"days,inline"`
+	Name     string              `json:"name" bson:"name"`
+	SubGroup int                 `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
 }
 
 func NewGroupMini() (m GroupMini) {
 	m.SubGroup = 0
 	m.Name = ""
-	day := NewDay()
-	m.Days = map[string]Day{
+	day := []Lesson{NewLesson()}
+	m.Days = map[string][]Lesson{
 		"ПОНЕДЕЛЬНИК": day,
 		"ВТОРНИК":     day,
 		"СРЕДА":       day,

@@ -13,7 +13,7 @@ func main() {
 	//for _, mini := range groupsMini {
 	//	fmt.Println(mini)
 	//}
-	err := db.InsertMany("test_database", "test_collection", &groups /*Mini*/)
+	err := db.InsertMany("test_database", "test_collection", &groupsMini /*Mini*/)
 
 	if err != nil {
 		log.Panicf("%v", err)

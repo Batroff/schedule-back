@@ -396,21 +396,21 @@ func Max(number ...int) int {
 	return max
 }
 
-//Удаляет последний пустой элемент
+// RemoveLastEmptyElement Удаляет последний пустой элемент
 func RemoveLastEmptyElement(array *[]string) {
 	if (*array)[len(*array)-1] == "" {
 		RemoveElement(array, len(*array)-1)
 	}
 }
 
-//Удаляет элемент из среза строк по индексу
+// RemoveElement Удаляет элемент из среза строк по индексу
 func RemoveElement(a *[]string, i int) {
 	*a = append((*a)[:i], (*a)[i+1:]...)
 }
 
 var regexpForFixSameSubjectParametersFunc = regexp.MustCompile("[^\\d()][А-я -]+")
 
-//Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода или задублировать последним найденным
+// FixSameSubjectParameters Если в строках содержатся одинаковые предметы, то подтянуть из нужной строки вид занятия или кабинет или препода или задублировать последним найденным
 func FixSameSubjectParameters(subjects, typeOfLessons, teachersNames, cabinets *[]string) {
 	for len(*typeOfLessons) < len(*subjects) {
 		*typeOfLessons = append(*typeOfLessons, "")

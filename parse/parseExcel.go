@@ -135,7 +135,7 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 			//	}
 			//}
 			//resultTest.Days[(*table)[i][colInfo]] = lessons
-			result.AddLesson(lessons)
+			//result.AddLesson(lessons)
 		} else {
 
 			lessons = DefaultParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
@@ -146,14 +146,20 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 			//}
 			//fmt.Println((*table)[i][colInfo+1])
 			//resultTest.Days[(*table)[i][colInfo]] = lessons
-			result.AddLesson(lessons)
+			//result.AddLesson(lessons)
 		}
-
+		//fmt.Println("До")
+		//fmt.Println(lessons)
 		for Exist(&lessons) != -1 {
 			RemoveElementLesson(&lessons, Exist(&lessons))
 		}
-		test := structure.Day{Lessons: lessons}
-		resultTest.Days[(*table)[i][colInfo]] = test
+		if !(Exist(&lessons) != -1 && len(lessons) == 1) {
+			resultTest.Days[(*table)[i][colInfo]] = append(resultTest.Days[(*table)[i][colInfo]], lessons...)
+		}
+		//fmt.Println("После")
+		//fmt.Println(lessons)
+		//fmt.Println(lessons)
+
 		//fmt.Println((*table)[i][colGroup])   //предмет
 		//fmt.Println((*table)[i][colGroup+1]) //вид занятия
 		//fmt.Println()table[i][colGroup+2])//ФИО преподавателя
@@ -179,8 +185,8 @@ func Exist(lessons *[]structure.Lesson) int {
 
 func RemoveElementLesson(a *[]structure.Lesson, i int) {
 	//*a = append((*a)[:i], (*a)[i+1:]...)
-	(*a)[i] = (*a)[len(*a)-1]            // Copy last element to index i.
-	(*a)[len(*a)-1] = structure.Lesson{} // Erase last element (write zero value).
+	(*a)[i] = (*a)[len(*a)-1]
+	(*a)[len(*a)-1] = structure.Lesson{}
 	*a = (*a)[:len(*a)-1]
 }
 
