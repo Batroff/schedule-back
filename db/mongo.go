@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func InsertMany(dbName, collectionName string, groups *[]structure.Group) error {
+func InsertMany(dbName, collectionName string, groups *[]structure.Group /*Mini*/) error {
 	client, ctx := connect("mongodb://localhost:27017")
 	defer disconnect(client, ctx)
 

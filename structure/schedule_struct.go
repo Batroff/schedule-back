@@ -11,7 +11,7 @@ var weeksMap = map[string]int{
 	"СУББОТА":     5,
 }
 
-// TODO: add annotations
+// Lesson TODO: add annotations
 type Lesson struct {
 	Subject      string //название предмета
 	TypeOfLesson string //тип занятия
@@ -91,4 +91,25 @@ func (l Lesson) FillInWeeks(week string) {
 			l.OccurrenceLesson[i] = true
 		}
 	}
+}
+
+type GroupMini struct {
+	Days     map[string]Day `json:"days" bson:"days,inline"`
+	Name     string         `json:"name" bson:"name"`
+	SubGroup int            `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
+}
+
+func NewGroupMini() (m GroupMini) {
+	m.SubGroup = 0
+	m.Name = ""
+	day := NewDay()
+	m.Days = map[string]Day{
+		"ПОНЕДЕЛЬНИК": day,
+		"ВТОРНИК":     day,
+		"СРЕДА":       day,
+		"ЧЕТВЕРГ":     day,
+		"ПЯТНИЦА":     day,
+		"СУББОТА":     day,
+	}
+	return m
 }

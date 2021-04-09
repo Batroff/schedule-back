@@ -7,9 +7,13 @@ import (
 )
 
 func main() {
-	groups := parse.Parse()
-
-	err := db.InsertMany("test_database", "test_collection", &groups)
+	groups, groupsMini := parse.Parse()
+	log.Printf(string(len(groups)))
+	log.Printf(string(len(groupsMini)))
+	//for _, mini := range groupsMini {
+	//	fmt.Println(mini)
+	//}
+	err := db.InsertMany("test_database", "test_collection", &groups /*Mini*/)
 
 	if err != nil {
 		log.Panicf("%v", err)
