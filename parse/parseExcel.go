@@ -21,10 +21,9 @@ func Contains(strings []string, s string) bool {
 	return false
 }
 
-func Parse() ([]structure.Group, []structure.GroupMini) {
+func Parse() []structure.Group {
 	var count int
 	var groups []structure.Group
-	var groupsMini []structure.GroupMini
 	links, err := html.Parse()
 	if err != nil {
 		log.Panicf("Error occured while html parsing. %v", err)
@@ -66,30 +65,24 @@ func Parse() ([]structure.Group, []structure.GroupMini) {
 						stringsUnique = append(stringsUnique, regexpGroupNumber.FindString(s))
 						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
 							SubgroupNumber = 1
-							group1, groupMini1 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+							group1 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
 							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-1"
-							groupMini1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-1"
 							group1.SubGroup = 1
-							groupMini1.SubGroup = 1
+							group1.Clear()
 							groups = append(groups, group1)
-							groupsMini = append(groupsMini, groupMini1)
 
 							SubgroupNumber = 2
-							group2, groupMini2 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+							group2 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
 							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-2"
-							groupMini2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-2"
 							group2.SubGroup = 2
-							groupMini2.SubGroup = 2
+							group2.Clear()
 							groups = append(groups, group2)
-							groupsMini = append(groupsMini, groupMini2)
 						} else {
-							group, groupMini := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
+							group := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
 							group.Name = regexpGroupNumber.FindString(str.ToTitle(s))
-							groupMini.Name = regexpGroupNumber.FindString(str.ToTitle(s))
 							group.SubGroup = 0
-							groupMini.SubGroup = 0
+							group.Clear()
 							groups = append(groups, group)
-							groupsMini = append(groupsMini, groupMini)
 						}
 						SubgroupNumber = 0
 					}
@@ -97,9 +90,9 @@ func Parse() ([]structure.Group, []structure.GroupMini) {
 			}
 		}
 	}
-	fmt.Println("Кол-во групп")
-	fmt.Println(count)
-	return groups, groupsMini
+	log.Println("Кол-во групп")
+	log.Println(count)
+	return groups
 }
 
 var SubgroupRegexp = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
@@ -113,65 +106,35 @@ func CheckSubgroups(table *[][]string, colGroup int, rowInfo int, rows int) bool
 	return false
 }
 
-func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) (structure.Group, structure.GroupMini) {
+func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
 	result := structure.NewGroup()
-	resultTest := structure.NewGroupMini()
 	var lessons []structure.Lesson
 	for i := rowInfo; i < rows; i++ {
+		/*
+			table[i][colGroup]		предмет
+			table[i][colGroup+1]	вид занятия
+			table[i][colGroup+2]	ФИО преподавателя
+			table[i][colGroup+3]	№ аудитории
+			table[i][colInfo]		день недели
+			table[i][colInfo+1]  	№пары
+			table[i][colInfo+4]  	Неделя
+		*/
 		if SubgroupRegexp.MatchString((*table)[i][colGroup]) { //проверка на подгруппы
-			//if str.Contains(table[i][colGroup], "гр") || str.Contains(table[i][colGroup], "п/г") {
-			//	fmt.Println(table[i][colGroup])   //предмет
-			//	fmt.Println(table[i][colGroup+1]) //вид занятия
-			//	fmt.Println(table[i][colGroup+2]) //ФИО преподавателя
-			//	fmt.Println(table[i][colGroup+3]) //№ аудитории
-			//  fmt.Println((*table)[i][colInfo])    //день недели
-			//	fmt.Println(table[i][colInfo+1])  //№пары
-			//	fmt.Println(table[i][colInfo+4])  //Неделя
-			//	fmt.Println("-------------------------------------------------")
 			lessons = SubGroupParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
-			//for _, lesson := range lessons {
-			//	if lesson.Exists {
-			//		fmt.Println(lesson)
-			//	}
-			//}
-			//resultTest.Days[(*table)[i][colInfo]] = lessons
-			//result.AddLesson(lessons)
 		} else {
-
 			lessons = DefaultParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
-			//for _, lesson := range lessons {
-			//	if lesson.Exists {
-			//		fmt.Println(lesson)
-			//	}
-			//}
-			//fmt.Println((*table)[i][colInfo+1])
-			//resultTest.Days[(*table)[i][colInfo]] = lessons
-			//result.AddLesson(lessons)
 		}
-		//fmt.Println("До")
-		//fmt.Println(lessons)
-		for Exist(&lessons) != -1 {
-			RemoveElementLesson(&lessons, Exist(&lessons))
+		for j := 0; j < len(lessons); j++ {
+			if !lessons[j].Exists {
+				structure.RemoveElementLesson(&lessons, j)
+				j--
+			}
 		}
 		if !(Exist(&lessons) != -1 && len(lessons) == 1) {
-			resultTest.Days[(*table)[i][colInfo]] = append(resultTest.Days[(*table)[i][colInfo]], lessons...)
+			result.Days[(*table)[i][colInfo]] = append(result.Days[(*table)[i][colInfo]], lessons...)
 		}
-		//fmt.Println("После")
-		//fmt.Println(lessons)
-		//fmt.Println(lessons)
-
-		//fmt.Println((*table)[i][colGroup])   //предмет
-		//fmt.Println((*table)[i][colGroup+1]) //вид занятия
-		//fmt.Println()table[i][colGroup+2])//ФИО преподавателя
-		//table[i][colGroup+3]) //№ аудитории
-		//table[i][colInfo])    //день недели
-		//table[i][colInfo+1])  //№пары
-		//table[i][colInfo+4])  //Неделя
-		////надо из этих 4 данных получать несколько уроков.
-		//fmt.Println((*table)[i][colInfo+1])
-
 	}
-	return result, resultTest
+	return result
 }
 
 func Exist(lessons *[]structure.Lesson) int {
@@ -181,13 +144,6 @@ func Exist(lessons *[]structure.Lesson) int {
 		}
 	}
 	return -1
-}
-
-func RemoveElementLesson(a *[]structure.Lesson, i int) {
-	//*a = append((*a)[:i], (*a)[i+1:]...)
-	(*a)[i] = (*a)[len(*a)-1]
-	(*a)[len(*a)-1] = structure.Lesson{}
-	*a = (*a)[:len(*a)-1]
 }
 
 func GetRows(table [][]string) int { //количество строк в таблице

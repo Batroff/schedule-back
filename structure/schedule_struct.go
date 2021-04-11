@@ -1,6 +1,8 @@
 package structure
 
-import "strings"
+import (
+	"strings"
+)
 
 var weeksMap = map[string]int{
 	"ПОНЕДЕЛЬНИК": 0,
@@ -13,57 +15,36 @@ var weeksMap = map[string]int{
 
 // Lesson TODO: add annotations
 type Lesson struct {
-	Subject      string //название предмета
-	TypeOfLesson string //тип занятия
-	TeacherName  string //фио преподавателя
-	Cabinet      string //кабинет
-	NumberLesson int    //номер пары
-	DayOfWeek    string //день недели
-	//occurrenceLesson []int//номера недель в которых присутствует эта пара
-	OccurrenceLesson []bool //номера недель в которых присутствует эта пара
-	Exists           bool   `json:"exists,omitempty" bson:"exists"` //для пустых пар??
-	SubGroup         int    // номер подгруппы
-}
-
-type Day struct {
-	Lessons []Lesson `json:"lessons" bson:"lessons"`
-}
-
-type Week struct {
-	Days []Day `json:"days" bson:"days"`
+	Subject          string `json:"subject" bson:"subject"`                   //название предмета
+	TypeOfLesson     string `json:"typeOfLesson" bson:"typeOfLesson"`         //тип занятия
+	TeacherName      string `json:"teacherName" bson:"teacherName"`           //фио преподавателя
+	Cabinet          string `json:"cabinet" bson:"cabinet"`                   //кабинет
+	NumberLesson     int    `json:"numberLesson" bson:"numberLesson"`         //номер пары
+	DayOfWeek        string `json:"dayOfWeek" bson:"dayOfWeek"`               //день недели
+	OccurrenceLesson []bool `json:"occurrenceLesson" bson:"occurrenceLesson"` //номера недель в которых присутствует эта пара
+	Exists           bool   `json:"exists,omitempty" bson:"exists"`           //для пустых пар??
+	SubGroup         int    `json:"subGroup" bson:"subGroup"`                 // номер подгруппы
 }
 
 type Group struct {
-	Weeks    []Week `json:"weeks" bson:"weeks"`
-	Name     string `json:"name" bson:"name"`
-	SubGroup int    `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
+	Days     map[string][]Lesson `json:"days" bson:"days,omitempty"`
+	Name     string              `json:"name" bson:"name"`
+	SubGroup int                 `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
 }
 
-func NewGroup() Group {
-	var g Group
-	g.Weeks = make([]Week, 17)
-	for i := range g.Weeks {
-		g.Weeks[i] = NewWeek()
+func NewGroup() (g Group) {
+	g.SubGroup = 0
+	g.Name = ""
+	day := []Lesson{NewLesson()}
+	g.Days = map[string][]Lesson{
+		"ПОНЕДЕЛЬНИК": day,
+		"ВТОРНИК":     day,
+		"СРЕДА":       day,
+		"ЧЕТВЕРГ":     day,
+		"ПЯТНИЦА":     day,
+		"СУББОТА":     day,
 	}
 	return g
-}
-
-func NewWeek() Week {
-	var w Week
-	w.Days = make([]Day, 6)
-	for i := range w.Days {
-		w.Days[i] = NewDay()
-	}
-	return w
-}
-
-func NewDay() Day {
-	var d Day
-	d.Lessons = make([]Lesson, 9)
-	for i := range d.Lessons {
-		d.Lessons[i] = NewLesson()
-	}
-	return d
 }
 
 func NewLesson() Lesson {
@@ -72,15 +53,6 @@ func NewLesson() Lesson {
 	return l
 }
 
-func (g Group) AddLesson(lessons []Lesson) {
-	for _, lesson := range lessons {
-		for i2, b := range lesson.OccurrenceLesson {
-			if b {
-				g.Weeks[i2].Days[weeksMap[lesson.DayOfWeek]].Lessons[lesson.NumberLesson] = lesson
-			}
-		}
-	}
-}
 func (l Lesson) FillInWeeks(week string) {
 	if strings.Contains(week, "II") {
 		for i := 1; i < len(l.OccurrenceLesson)-1; i += 2 {
@@ -93,23 +65,22 @@ func (l Lesson) FillInWeeks(week string) {
 	}
 }
 
-type GroupMini struct {
-	Days     map[string][]Lesson `json:"days" bson:"days,inline"`
-	Name     string              `json:"name" bson:"name"`
-	SubGroup int                 `json:"subgroup,omitempty" bson:"subgroup,omitempty"` // номер подгруппы
+func (g Group) Clear() {
+	for s := range g.Days {
+		for i := 0; i < len(g.Days[s]); i++ {
+			if !(g.Days[s])[i].Exists {
+				temp := g.Days[s]
+				RemoveElementLesson(&temp, i)
+				g.Days[s] = temp
+				i--
+			}
+		}
+	}
 }
 
-func NewGroupMini() (m GroupMini) {
-	m.SubGroup = 0
-	m.Name = ""
-	day := []Lesson{NewLesson()}
-	m.Days = map[string][]Lesson{
-		"ПОНЕДЕЛЬНИК": day,
-		"ВТОРНИК":     day,
-		"СРЕДА":       day,
-		"ЧЕТВЕРГ":     day,
-		"ПЯТНИЦА":     day,
-		"СУББОТА":     day,
-	}
-	return m
+func RemoveElementLesson(a *[]Lesson, i int) {
+	//*a = append((*a)[:i], (*a)[i+1:]...)
+	(*a)[i] = (*a)[len(*a)-1]
+	(*a)[len(*a)-1] = Lesson{}
+	*a = (*a)[:len(*a)-1]
 }
