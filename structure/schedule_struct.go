@@ -4,26 +4,16 @@ import (
 	"strings"
 )
 
-var weeksMap = map[string]int{
-	"ПОНЕДЕЛЬНИК": 0,
-	"ВТОРНИК":     1,
-	"СРЕДА":       2,
-	"ЧЕТВЕРГ":     3,
-	"ПЯТНИЦА":     4,
-	"СУББОТА":     5,
-}
-
-// Lesson TODO: add annotations
 type Lesson struct {
 	Subject          string `json:"subject" bson:"subject"`                   //название предмета
 	TypeOfLesson     string `json:"typeOfLesson" bson:"typeOfLesson"`         //тип занятия
 	TeacherName      string `json:"teacherName" bson:"teacherName"`           //фио преподавателя
 	Cabinet          string `json:"cabinet" bson:"cabinet"`                   //кабинет
 	NumberLesson     int    `json:"numberLesson" bson:"numberLesson"`         //номер пары
-	DayOfWeek        string `json:"dayOfWeek" bson:"dayOfWeek"`               //день недели
+	DayOfWeek        string `json:"dayOfWeek" bson:"dayOfWeek,omitempty"`     //день недели
 	OccurrenceLesson []bool `json:"occurrenceLesson" bson:"occurrenceLesson"` //номера недель в которых присутствует эта пара
-	Exists           bool   `json:"exists,omitempty" bson:"exists"`           //для пустых пар??
-	SubGroup         int    `json:"subGroup" bson:"subGroup"`                 // номер подгруппы
+	Exists           bool   `json:"exists,omitempty" bson:"exists,omitempty"` //для пустых пар??
+	SubGroup         int    `json:"subGroup" bson:"subGroup,omitempty"`       // номер подгруппы
 }
 
 type Group struct {
@@ -76,11 +66,18 @@ func (g Group) Clear() {
 			}
 		}
 	}
+	for s, lessons := range g.Days {
+		for i := range lessons {
+			g.Days[s][i].Exists = false
+			g.Days[s][i].DayOfWeek = ""
+			g.Days[s][i].SubGroup = 0
+		}
+	}
 }
 
 func RemoveElementLesson(a *[]Lesson, i int) {
-	//*a = append((*a)[:i], (*a)[i+1:]...)
-	(*a)[i] = (*a)[len(*a)-1]
-	(*a)[len(*a)-1] = Lesson{}
-	*a = (*a)[:len(*a)-1]
+	*a = append((*a)[:i], (*a)[i+1:]...)
+	//(*a)[i] = (*a)[len(*a)-1]
+	//(*a)[len(*a)-1] = Lesson{}
+	//*a = (*a)[:len(*a)-1]
 }
