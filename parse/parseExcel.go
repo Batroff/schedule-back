@@ -22,6 +22,7 @@ func Contains(strings []string, s string) bool {
 }
 
 func Parse() []structure.Group {
+	GroupList123 := make([]string, 0)
 	var count int
 	var groups []structure.Group
 	links, err := html.Parse()
@@ -55,29 +56,30 @@ func Parse() []structure.Group {
 				colInfo++
 			}
 			rowInfo += 2
-			stringsUnique := make([]string, len(table))
 			rowsTable := GetRows(table) // количество строк
 			for rowGroup, strings := range table {
 				for colGroup, s := range strings {
 
-					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(stringsUnique, regexpGroupNumber.FindString(s)) {
+					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(GroupList123, regexpGroupNumber.FindString(s)) {
 						count++
-						stringsUnique = append(stringsUnique, regexpGroupNumber.FindString(s))
+						GroupList123 = append(GroupList123, regexpGroupNumber.FindString(s))
 						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
+							structure.GroupMap[regexpGroupNumber.FindString(s)] = true
 							SubgroupNumber = 1
 							group1 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-1"
+							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-1"
 							group1.SubGroup = 1
 							group1.Clear()
 							groups = append(groups, group1)
 
 							SubgroupNumber = 2
 							group2 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-2"
+							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-2"
 							group2.SubGroup = 2
 							group2.Clear()
 							groups = append(groups, group2)
 						} else {
+							structure.GroupMap[regexpGroupNumber.FindString(s)] = false
 							group := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
 							group.Name = regexpGroupNumber.FindString(str.ToTitle(s))
 							group.SubGroup = 0
