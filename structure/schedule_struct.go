@@ -84,3 +84,15 @@ func RemoveElementLesson(a *[]Lesson, i int) {
 	(*a)[len(*a)-1] = Lesson{}
 	*a = (*a)[:len(*a)-1]
 }
+
+var GroupMap = make(map[string]bool)
+
+type GroupList struct {
+	Map map[string]bool `json:"map" bson:"map"`
+}
+
+func CreateGroupList() GroupList {
+	var result GroupList
+	result.Map = GroupMap
+	return result
+}
