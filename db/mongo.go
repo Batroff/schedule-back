@@ -32,9 +32,27 @@ func InsertMany(dbName, collectionName string, groups *[]structure.Group) error 
 	return nil
 }
 
-// TODO: Rework return type
-func FindGroup(dbName, collectionName, groupName string) structure.Group {
-	var group structure.Group
+func InsertGroupList(dbName, collectionName string) error {
+	client, ctx := connect("mongodb://localhost:27017")
+	defer disconnect(client, ctx)
+
+	groupList := structure.CreateGroupList()
+
+	database := client.Database(dbName)
+	collection := database.Collection(collectionName)
+
+	_, err := collection.InsertOne(ctx, groupList)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetGroupList(dbName, collectionName string) (structure.GroupList, error) {
+	var result = structure.GroupList{}
+	var err error = nil
 
 	client, ctx := connect("mongodb://localhost:27017")
 	defer disconnect(client, ctx)
@@ -42,12 +60,39 @@ func FindGroup(dbName, collectionName, groupName string) structure.Group {
 	database := client.Database(dbName)
 	collection := database.Collection(collectionName)
 
-	err := collection.FindOne(context.Background(), bson.M{"name": groupName}).Decode(&group)
+	err = collection.FindOne(context.Background(), bson.D{}).Decode(&result)
+
+	//cursor, err := collection.Find(context.TODO(), bson.M{})
+
 	if err != nil {
 		log.Printf("%v", err)
+		return structure.GroupList{}, err
 	}
 
-	return group
+	return result, nil
+}
+
+func FindGroup(dbName, collectionName, groupName string, subgroup string) (structure.Group, error) {
+	var group structure.Group
+	var err error = nil
+
+	client, ctx := connect("mongodb://localhost:27017")
+	defer disconnect(client, ctx)
+
+	database := client.Database(dbName)
+	collection := database.Collection(collectionName)
+
+	if subgroup != "" {
+		err = collection.FindOne(context.Background(), bson.M{"name": groupName, "subgroup": subgroup[0]}).Decode(&group)
+	} else {
+		err = collection.FindOne(context.Background(), bson.M{"name": groupName}).Decode(&group)
+	}
+	if err != nil {
+		log.Printf("%v", err)
+		return structure.Group{}, err
+	}
+
+	return group, err
 }
 
 func disconnect(client *mongo.Client, ctx context.Context) {
