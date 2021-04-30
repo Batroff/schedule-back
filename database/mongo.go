@@ -1,16 +1,16 @@
-package db
+package database
 
 import (
 	"context"
+	"github.com/batroff/schedule-back/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"schedule/structure"
 	"time"
 )
 
-func InsertMany(dbName, collectionName string, groups *[]structure.Group) error {
+func InsertMany(dbName, collectionName string, groups *[]models.Group) error {
 	client, ctx := connect("mongodb://localhost:27017")
 	defer disconnect(client, ctx)
 
@@ -36,7 +36,7 @@ func InsertGroupList(dbName, collectionName string) error {
 	client, ctx := connect("mongodb://localhost:27017")
 	defer disconnect(client, ctx)
 
-	groupList := structure.CreateGroupList()
+	groupList := models.CreateGroupList()
 
 	database := client.Database(dbName)
 	collection := database.Collection(collectionName)
@@ -50,8 +50,8 @@ func InsertGroupList(dbName, collectionName string) error {
 	return nil
 }
 
-func GetGroupList(dbName, collectionName string) (structure.GroupList, error) {
-	var result = structure.GroupList{}
+func GetGroupList(dbName, collectionName string) (models.GroupList, error) {
+	var result = models.GroupList{}
 	var err error = nil
 
 	client, ctx := connect("mongodb://localhost:27017")
@@ -66,14 +66,14 @@ func GetGroupList(dbName, collectionName string) (structure.GroupList, error) {
 
 	if err != nil {
 		log.Printf("%v", err)
-		return structure.GroupList{}, err
+		return models.GroupList{}, err
 	}
 
 	return result, nil
 }
 
-func FindGroup(dbName, collectionName, groupName string, subgroup string) (structure.Group, error) {
-	var group structure.Group
+func FindGroup(dbName, collectionName, groupName string, subgroup string) (models.Group, error) {
+	var group models.Group
 	var err error = nil
 
 	client, ctx := connect("mongodb://localhost:27017")
@@ -89,7 +89,7 @@ func FindGroup(dbName, collectionName, groupName string, subgroup string) (struc
 	}
 	if err != nil {
 		log.Printf("%v", err)
-		return structure.Group{}, err
+		return models.Group{}, err
 	}
 
 	return group, err

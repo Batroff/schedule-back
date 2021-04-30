@@ -1,48 +1,47 @@
-package main
+package server
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/batroff/schedule-back/database"
+	"github.com/batroff/schedule-back/models"
+	"log"
 	"net/http"
 	"regexp"
-	"schedule/db"
-	"schedule/structure"
 )
 
-type ResponseGroup struct {
-	ErrorMsg string          `json:"ErrorMsg,omitempty"`
-	Group    structure.Group `json:"Group,omitempty"`
+func Start() {
+	http.HandleFunc("/api/groupList/", groupListHandler)
+	http.HandleFunc("/api/group/", find)
+
+	log.Println("Запуск сервера на 127.0.0.1:8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-type ResponseGroupList struct {
-	ErrorMsg  string              `json:"ErrorMsg,omitempty"`
-	GroupList structure.GroupList `json:"GroupList"`
-}
-
-var groupRegexp = regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
+var groupRegexp = regexp.MustCompile(`^[А-Я]{4}[-]\d{2}[-]\d{2}$`)
 
 func find(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	group := query.Get("group")
+	group := query.Get("name")
 	subgroup := query.Get("subgroup")
 
-	var response *ResponseGroup
+	var response *models.ResponseGroup
 
 	if groupRegexp.MatchString(group) {
-		dbGroup, err := db.FindGroup("test_database", "test_collection", group, subgroup)
+		dbGroup, err := database.FindGroup("test_database", "test_collection", group, subgroup)
 		if err != nil {
 			if err.Error() == "mongo: no documents in result" {
 				w.WriteHeader(http.StatusNotFound)
 			} else {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-			response = &ResponseGroup{
+			response = &models.ResponseGroup{
 				ErrorMsg: err.Error(),
 				Group:    dbGroup,
 			}
 		} else {
 			w.WriteHeader(http.StatusOK)
-			response = &ResponseGroup{
+			response = &models.ResponseGroup{
 				ErrorMsg: "",
 				Group:    dbGroup,
 			}
@@ -50,7 +49,7 @@ func find(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
-		response = &ResponseGroup{
+		response = &models.ResponseGroup{
 			ErrorMsg: "Bad request",
 		}
 	}
@@ -62,19 +61,19 @@ func find(w http.ResponseWriter, r *http.Request) {
 }
 
 func groupListHandler(w http.ResponseWriter, r *http.Request) {
-	var response *ResponseGroupList
+	var response *models.ResponseGroupList
 
-	groupList, err := db.GetGroupList("test_database", "group_list")
+	groupList, err := database.GetGroupList("test_database", "group_list")
 	if err == nil {
-		response = &ResponseGroupList{
+		response = &models.ResponseGroupList{
 			GroupList: groupList,
 			ErrorMsg:  "",
 		}
 		w.WriteHeader(http.StatusOK)
 	} else {
 		fmt.Println(err)
-		response = &ResponseGroupList{
-			GroupList: structure.GroupList{},
+		response = &models.ResponseGroupList{
+			GroupList: models.GroupList{},
 			ErrorMsg:  "GroupList is empty",
 		}
 		w.WriteHeader(http.StatusInternalServerError)

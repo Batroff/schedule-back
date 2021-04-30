@@ -1,4 +1,4 @@
-module schedule
+module github.com/batroff/schedule-back
 
 go 1.16
 

@@ -1,8 +1,8 @@
-package parse
+package excel
 
 import (
+	"github.com/batroff/schedule-back/models"
 	"regexp"
-	. "schedule/structure"
 	"strconv"
 	"strings"
 )
@@ -68,20 +68,20 @@ var GlobalDayOfWeek string
 var GlobalNumberLesson string
 
 //основная функция парса подгрупп
-func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) (resultLessons []Lesson) {
-	var lessons []Lesson
+func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) (resultLessons []models.Lesson) {
+	var lessons []models.Lesson
 	GlobalWeek = week
 	GlobalDayOfWeek = dayOfWeek
 	GlobalNumberLesson = numberLesson
 	if strings.Contains(subject, "\n") { // если в строчке с предметом более 1 строки
 		lessons = LessonToLessons(subject, typeOfLesson, teacherName, cabinet)
 	} else { // в строке нет энтеров
-		lesson := NewLesson()
+		lesson := models.NewLesson()
 		lesson.Subject = subject
 		lesson.TypeOfLesson = typeOfLesson
 		lesson.TeacherName = teacherName
 		lesson.Cabinet = cabinet
-		lessons = []Lesson{lesson}
+		lessons = []models.Lesson{lesson}
 	}
 	SubgroupLessonsSort(&lessons)
 	for i, _ := range lessons {
@@ -93,7 +93,7 @@ func SubGroupParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numbe
 }
 
 //в зависимости от номера группы переключает поле существования пары
-func SubgroupLessonParse(lesson *Lesson) {
+func SubgroupLessonParse(lesson *models.Lesson) {
 	if SubgroupNumber == lesson.SubGroup || lesson.SubGroup == 0 {
 		lesson.Exists = true
 	} else {
@@ -111,7 +111,7 @@ func SubgroupLessonParse(lesson *Lesson) {
 //fmt.Println("Кабинет")
 //fmt.Println((*lessons)[i].Cabinet)
 //метод убирает подгруппы, использует обычный парс и добавляет номер подгруппы в предметы
-func SubgroupLessonsSort(lessons *[]Lesson) {
+func SubgroupLessonsSort(lessons *[]models.Lesson) {
 	for getIdLesson(lessons) != -1 {
 		i2 := getIdLesson(lessons)
 		lesson1, lesson2 := Fix((*lessons)[i2])
@@ -148,14 +148,14 @@ func SubgroupLessonsSort(lessons *[]Lesson) {
 			(*lessons)[i].SubGroup = 0
 			(*lessons)[i].FillInWeeks(GlobalWeek)
 		} else {
-			(*lessons)[i] = NewLesson()
+			(*lessons)[i] = models.NewLesson()
 			(*lessons)[i].SubGroup = -1
 		}
 	}
 }
 
 //номер случая, где требуется изменение размера массива
-func getIdLesson(lessons *[]Lesson) (array int) {
+func getIdLesson(lessons *[]models.Lesson) (array int) {
 	for i, lesson := range *lessons {
 		if strings.Contains(lesson.Subject, "1+2 гр") {
 			(*lessons)[i].Subject = strings.ReplaceAll((*lessons)[i].Subject, "1+2 гр", "1 гр/2 гр")
@@ -172,9 +172,9 @@ func getIdLesson(lessons *[]Lesson) (array int) {
 }
 
 //разделение предметов, которые содержат сразу 2 подгруппы
-func Fix(lesson Lesson) (lesson1, lesson2 Lesson) {
-	lesson1 = NewLesson()
-	lesson2 = NewLesson()
+func Fix(lesson models.Lesson) (lesson1, lesson2 models.Lesson) {
+	lesson1 = models.NewLesson()
+	lesson2 = models.NewLesson()
 	if CrutchRegexp1.MatchString(lesson.Subject) {
 		subgroupStr := CrutchRegexp1.FindString(lesson.Subject)
 		str := strings.ReplaceAll(lesson.Subject, subgroupStr, "")
@@ -294,8 +294,8 @@ func Fix(lesson Lesson) (lesson1, lesson2 Lesson) {
 }
 
 //урок с несколькими предметами => массив уроков
-func LessonToLessons(subject, typeOfLesson, teacherName, cabinet string) []Lesson {
-	var lessons []Lesson
+func LessonToLessons(subject, typeOfLesson, teacherName, cabinet string) []models.Lesson {
+	var lessons []models.Lesson
 	if strings.Contains(cabinet, "В-78*\n") || strings.Contains(cabinet, "В-86*\n") || strings.Contains(cabinet, "МП-1*\n") {
 		strings.ReplaceAll(cabinet, "В-78*\n", "В-78* ")
 		strings.ReplaceAll(cabinet, "В-86*\n", "В-86* ")
@@ -365,7 +365,7 @@ func LessonToLessons(subject, typeOfLesson, teacherName, cabinet string) []Lesso
 			length--
 			continue
 		}
-		someLesson := NewLesson()
+		someLesson := models.NewLesson()
 		someLesson.Subject = collection[0][i]
 		someLesson.TypeOfLesson = collection[1][i]
 		someLesson.TeacherName = collection[2][i]

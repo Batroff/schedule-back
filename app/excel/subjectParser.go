@@ -1,13 +1,13 @@
-package parse
+package excel
 
 import (
+	"github.com/batroff/schedule-back/models"
 	"regexp"
-	. "schedule/structure"
 	"strconv"
 	"strings"
 )
 
-func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []Lesson {
+func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []models.Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
 	if subject != "" {
 		//fmt.Println("исходная пара: ")
@@ -24,14 +24,14 @@ func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, number
 		return lessons
 	}
 
-	return []Lesson{Lesson{
+	return []models.Lesson{models.Lesson{
 		Exists: false,
 	}}
 }
-func lessonBuilder(week string, lessons, teachers, cabinets, types *[]string) []Lesson {
-	var someLessons []Lesson
+func lessonBuilder(week string, lessons, teachers, cabinets, types *[]string) []models.Lesson {
+	var someLessons []models.Lesson
 	for i, v := range *lessons {
-		someLesson := NewLesson()
+		someLesson := models.NewLesson()
 		flag := exceptFlag(v)
 		FillingInOccurrenceLesson(flag, week, someLesson, v)
 		someLesson.Subject = TruncateWeekNumbers(v)
@@ -152,7 +152,7 @@ func HasNextNumbers(line string) int {
 		return -1
 	}
 }
-func FillingInOccurrenceLesson(flag bool, week string, someLesson Lesson, line string) {
+func FillingInOccurrenceLesson(flag bool, week string, someLesson models.Lesson, line string) {
 	if DefaultRegexpNumbersIndex(line)[1] < 0 {
 		someLesson.FillInWeeks(week)
 	} else {
