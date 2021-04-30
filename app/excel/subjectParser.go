@@ -9,12 +9,15 @@ import (
 
 func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []models.Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
+	subject = strings.ReplaceAll(subject, "1С", "ОДИН ЦЕ")
 	if subject != "" {
 		//fmt.Println("исходная пара: ")
 		//fmt.Println(subject)
 		a, b, c, d := countBalance(SlashManage(SeparateLessons(subject), SeparateTeachers(teacherName), SeparateCabinets(cabinet), SeparateCabinets(typeOfLesson)))
 		lessons := lessonBuilder(week, &a, &b, &c, &d)
 		for i := range lessons {
+			lessons[i].TeacherName = strings.ReplaceAll(lessons[i].TeacherName, "/", "")
+			lessons[i].Subject = strings.ReplaceAll(lessons[i].Subject, "ОДИН ЦЕ", "1С")
 			lessons[i].NumberLesson, _ = strconv.Atoi(numberLesson)
 			lessons[i].DayOfWeek = dayOfWeek
 			lessons[i].SubGroup = 0
@@ -73,7 +76,9 @@ func orSplit(subject string) []string { // делит номера недель
 	}
 }
 func removeSpaces(subject string) string {
-	subject = strings.ReplaceAll(subject, "  ", "")
+	for strings.Contains(subject, "  ") {
+		subject = strings.ReplaceAll(subject, "  ", " ")
+	}
 	if subject[len(subject)-1:] == " " {
 		subject = subject[:len(subject)-1]
 	}
