@@ -7,8 +7,8 @@ type Lesson struct {
 	TeacherName      string `json:"teacherName" bson:"teacherName"`           //фио преподавателя
 	Cabinet          string `json:"cabinet" bson:"cabinet"`                   //кабинет
 	NumberLesson     int    `json:"numberLesson" bson:"numberLesson"`         //номер пары
-	DayOfWeek        string `json:"dayOfWeek" bson:"dayOfWeek"`               //день недели
+	DayOfWeek        string `json:"dayOfWeek" bson:"dayOfWeek,omitempty"`     //день недели
 	OccurrenceLesson []bool `json:"occurrenceLesson" bson:"occurrenceLesson"` //номера недель в которых присутствует эта пара
-	Exists           bool   `json:"exists,omitempty" bson:"exists"`           //для пустых пар??
-	SubGroup         int    `json:"subGroup" bson:"subGroup"`                 // номер подгруппы
+	Exists           bool   `json:"exists,omitempty" bson:"exists,omitempty"` //для пустых пар??
+	SubGroup         int    `json:"subGroup" bson:"subGroup,omitempty"`       // номер подгруппы
 }
