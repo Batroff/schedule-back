@@ -4,7 +4,7 @@ services:
     image : mongo
     container_name : mongo_db
     volumes:
-    - /mongodb/database:/data/db
+    - /mongodb/database:/data/database
     ports:
     - 27017:27017
     restart: unless-stopped

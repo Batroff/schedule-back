@@ -2,22 +2,16 @@ package html
 
 import (
 	"bytes"
+	"github.com/batroff/schedule-back/app"
+	"github.com/batroff/schedule-back/models"
 	"golang.org/x/net/html"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
-	"schedule/download"
 	"strings"
 )
-
-// TODO: Create methods & encapsulate struct
-type NodeParams struct {
-	NodeName   string
-	NodeType   html.NodeType
-	Attributes []html.Attribute
-}
 
 /* Get map of links
 0 - Бакалавр/Специалитет;
@@ -28,10 +22,10 @@ type NodeParams struct {
 */
 
 // TODO: add catching exceptions
-func Parse() (map[int][]string, error) {
-	const filepath string = "schedule.html"
+func GetExcelLinks() (map[int][]string, error) {
+	const filepath string = "github.com/batroff/schedule-back.html"
 
-	downloadErr := download.GetFile(filepath, "https://www.mirea.ru/schedule/")
+	downloadErr := app.GetFile(filepath, "https://www.mirea.ru/github.com/batroff/schedule-back/")
 	if downloadErr != nil {
 		log.Panicf("Download error: %v", downloadErr)
 
@@ -47,10 +41,10 @@ func Parse() (map[int][]string, error) {
 
 	document, htmlParseErr := html.Parse(strings.NewReader(string(dat)))
 	if htmlParseErr != nil {
-		log.Panicf("HTML parse error: %v", htmlParseErr)
+		log.Panicf("HTML excel error: %v", htmlParseErr)
 	}
 
-	ulParams := &NodeParams{
+	ulParams := &models.NodeParams{
 		NodeName:   "ul",
 		NodeType:   html.ElementNode,
 		Attributes: []html.Attribute{{Key: "id", Val: "tab-content"}},
@@ -130,7 +124,7 @@ func attrContains(attr1, attr2 html.Attribute) bool {
 }
 
 /*  */
-func findNode(root *html.Node, params *NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) *html.Node {
+func findNode(root *html.Node, params *models.NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) *html.Node {
 	var find func(node *html.Node)
 	var resultNode *html.Node
 
@@ -163,7 +157,7 @@ func findNode(root *html.Node, params *NodeParams, compareFunc func(attr1 html.A
 }
 
 /* TODO: Write selector for multiple nodes
-func findNodes(root *html.Node, params *NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) []*html.Node {
+func findNodes(root *html.Node, params *models.NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) []*html.Node {
 
 }
 */

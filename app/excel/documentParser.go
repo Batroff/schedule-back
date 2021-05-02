@@ -1,13 +1,13 @@
-package parse
+package excel
 
 import (
 	"fmt"
+	"github.com/batroff/schedule-back/app"
+	"github.com/batroff/schedule-back/app/html"
+	"github.com/batroff/schedule-back/models"
 	"github.com/plandem/xlsx"
 	"log"
 	"regexp"
-	"schedule/download"
-	"schedule/html"
-	"schedule/structure"
 	"strconv"
 	str "strings"
 )
@@ -21,10 +21,11 @@ func Contains(strings []string, s string) bool {
 	return false
 }
 
-func Parse() []structure.Group {
+func Parse() []models.Group {
+	GroupList123 := make([]string, 0)
 	var count int
-	var groups []structure.Group
-	links, err := html.Parse()
+	var groups []models.Group
+	links, err := html.GetExcelLinks()
 	if err != nil {
 		log.Panicf("Error occured while html parsing. %v", err)
 	}
@@ -33,7 +34,7 @@ func Parse() []structure.Group {
 	for i, link := range links[0] {
 		path := "C:/Excel/" + strconv.Itoa(i) + ".xlsx"
 		defer fmt.Println(path)
-		err := download.GetFile(path, link)
+		err := app.GetFile(path, link)
 		if err != nil {
 			panic(err)
 		}
@@ -55,29 +56,30 @@ func Parse() []structure.Group {
 				colInfo++
 			}
 			rowInfo += 2
-			stringsUnique := make([]string, len(table))
 			rowsTable := GetRows(table) // количество строк
 			for rowGroup, strings := range table {
 				for colGroup, s := range strings {
 
-					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(stringsUnique, regexpGroupNumber.FindString(s)) {
+					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(GroupList123, regexpGroupNumber.FindString(s)) {
 						count++
-						stringsUnique = append(stringsUnique, regexpGroupNumber.FindString(s))
+						GroupList123 = append(GroupList123, regexpGroupNumber.FindString(s))
 						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
+							models.GroupMap[regexpGroupNumber.FindString(s)] = true
 							SubgroupNumber = 1
 							group1 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-1"
+							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-1"
 							group1.SubGroup = 1
 							group1.Clear()
 							groups = append(groups, group1)
 
 							SubgroupNumber = 2
 							group2 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) + "-2"
+							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-2"
 							group2.SubGroup = 2
 							group2.Clear()
 							groups = append(groups, group2)
 						} else {
+							models.GroupMap[regexpGroupNumber.FindString(s)] = false
 							group := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
 							group.Name = regexpGroupNumber.FindString(str.ToTitle(s))
 							group.SubGroup = 0
@@ -106,9 +108,9 @@ func CheckSubgroups(table *[][]string, colGroup int, rowInfo int, rows int) bool
 	return false
 }
 
-func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) structure.Group {
-	result := structure.NewGroup()
-	var lessons []structure.Lesson
+func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) models.Group {
+	result := models.NewGroup()
+	var lessons []models.Lesson
 	for i := rowInfo; i < rows; i++ {
 		/*
 			table[i][colGroup]		предмет
@@ -126,7 +128,7 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 		}
 		for j := 0; j < len(lessons); j++ {
 			if !lessons[j].Exists {
-				structure.RemoveElementLesson(&lessons, j)
+				models.RemoveElementLesson(&lessons, j)
 				j--
 			}
 		}
@@ -137,7 +139,7 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 	return result
 }
 
-func Exist(lessons *[]structure.Lesson) int {
+func Exist(lessons *[]models.Lesson) int {
 	for i, lesson := range *lessons {
 		if lesson.Exists == false {
 			return i
