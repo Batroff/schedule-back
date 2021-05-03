@@ -1,0 +1,5 @@
+mongo:
+  host: mongodb://localhost:27017
+
+server:
+  address: 0.0.0.0:8080

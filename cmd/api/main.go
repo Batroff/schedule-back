@@ -1,24 +1,42 @@
 package main
 
 import (
+	"github.com/batroff/schedule-back/app"
 	"github.com/batroff/schedule-back/app/excel"
 	"github.com/batroff/schedule-back/database"
+	"github.com/batroff/schedule-back/models/config"
 	"github.com/batroff/schedule-back/server"
 	"log"
 )
 
 func main() {
+	cfg := initConfig()
+
 	groups := excel.Parse()
 
-	err := database.InsertMany("test_database", "test_collection", &groups)
+	dbConfig := database.SetConfig(cfg.Mongo.Host)
+	groupsQuery := database.SetQuery("schedule", "groups")
+	err := database.InsertMany(dbConfig, groupsQuery, &groups)
 
 	if err != nil {
 		log.Panicf("%v", err)
 	}
-	err = database.InsertGroupList("test_database", "group_list")
+
+	dbConfig = database.SetConfig(cfg.Mongo.Host)
+	groupListQuery := database.SetQuery("schedule", "group_list")
+	err = database.InsertGroupList(dbConfig, groupListQuery)
 	if err != nil {
 		log.Panicf("%v", err)
 	}
 
 	server.Start()
+}
+
+func initConfig() *config.AppConfig {
+	cfg, err := app.LoadConfig("config/")
+	if err != nil {
+		log.Panicf("%s", err)
+	}
+
+	return cfg
 }
