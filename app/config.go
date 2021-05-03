@@ -14,13 +14,13 @@ func LoadConfig(path string) (*config.AppConfig, error) {
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Viper config read error.")
 	}
 
 	var cfg = &config.AppConfig{}
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "can not unmarshal config from file to struct")
+		return nil, errors.Wrap(err, "Can not unmarshal config from file to struct")
 	}
 
 	return cfg, nil
