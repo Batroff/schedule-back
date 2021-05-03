@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func GroupListHandler(w http.ResponseWriter, r *http.Request) {
+func GroupListHandler(w http.ResponseWriter, _ *http.Request) {
 	var response *models.ResponseGroupList
 
 	cfg, err := app.LoadConfig("./config/app.yaml")
@@ -27,10 +27,10 @@ func GroupListHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 	} else {
-		fmt.Println(err)
+		log.Printf("Group list error -- %s", err)
 		response = &models.ResponseGroupList{
-			GroupList: models.GroupList{},
-			ErrorMsg:  "GroupList is empty",
+			GroupList: nil,
+			ErrorMsg:  "group list is empty",
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 	}
