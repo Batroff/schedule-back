@@ -22,7 +22,6 @@ func main() {
 		log.Panicf("%v", err)
 	}
 
-	dbConfig = database.SetConfig(cfg.Mongo.Host)
 	groupListQuery := database.SetQuery("schedule", "group_list")
 	err = database.InsertGroupList(dbConfig, groupListQuery)
 	if err != nil {
