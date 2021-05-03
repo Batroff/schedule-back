@@ -23,9 +23,9 @@ import (
 
 // TODO: add catching exceptions
 func GetExcelLinks() (map[int][]string, error) {
-	const filepath string = "github.com/batroff/schedule-back.html"
+	const filepath string = "schedule.html"
 
-	downloadErr := app.GetFile(filepath, "https://www.mirea.ru/github.com/batroff/schedule-back/")
+	downloadErr := app.GetFile(filepath, "https://www.mirea.ru/schedule/")
 	if downloadErr != nil {
 		log.Panicf("Download error: %v", downloadErr)
 
