@@ -21,7 +21,7 @@ func GroupHandler(w http.ResponseWriter, r *http.Request) {
 	var response *models.ResponseGroup
 
 	if groupRegexp.MatchString(group) {
-		cfg, err := app.LoadConfig("./config/app.yaml")
+		cfg, err := app.LoadConfig("config/")
 		if err != nil {
 			log.Panicf("%s", err)
 		}
@@ -35,7 +35,7 @@ func GroupHandler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 			response = &models.ResponseGroup{
-				ErrorMsg: err.Error(),
+				ErrorMsg: "no documents in result",
 				Group:    dbGroup,
 			}
 		} else {

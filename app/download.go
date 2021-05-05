@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/http"
@@ -9,34 +10,34 @@ import (
 
 func GetFile(filepath, url string) error {
 	// Get the data
-	log.Printf("Getting url: %s...", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+	resp, downloadErr := http.Get(url)
+	if downloadErr != nil {
+		return errors.Wrap(downloadErr, "Download error.")
 	}
+	log.Printf("File successfuly downloaded from %s", url)
 
 	// Create the file
-	log.Printf("Create file: %s...", filepath)
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
+	out, createErr := os.Create(filepath)
+	if createErr != nil {
+		return errors.Wrap(createErr, "Creating file error.")
 	}
+	log.Printf("File %s created.", filepath)
 
 	// Write the body to file
-	log.Printf("Copying to file...")
-	_, err = io.Copy(out, resp.Body)
+	_, copyErr := io.Copy(out, resp.Body)
+	if copyErr != nil {
+		return errors.Wrap(copyErr, "Copying file error.")
+	}
 
-	defer func() {
-		respErr := resp.Body.Close()
-		if respErr != nil {
-			log.Panicf("Error occured while response closing, %v", respErr)
-		}
+	respErr := resp.Body.Close()
+	if respErr != nil {
+		return errors.Wrap(respErr, "Response closing error")
+	}
 
-		fileErr := out.Close()
-		if fileErr != nil {
-			log.Panicf("Error occured while file closing, %v", fileErr)
-		}
-	}()
+	fileErr := out.Close()
+	if fileErr != nil {
+		return errors.Wrap(fileErr, "File closing error")
+	}
 
-	return err
+	return nil
 }
