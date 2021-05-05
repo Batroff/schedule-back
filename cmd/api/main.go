@@ -16,7 +16,7 @@ func main() {
 
 	dbConfig := database.SetConfig(cfg.Mongo.Host)
 	groupsQuery := database.SetQuery("schedule", "groups")
-	err := database.InsertMany(dbConfig, groupsQuery, &groups)
+	err := database.InsertMany(dbConfig, groupsQuery, groups)
 
 	if err != nil {
 		log.Panicf("%v", err)

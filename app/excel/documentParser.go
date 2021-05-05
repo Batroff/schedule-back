@@ -12,28 +12,22 @@ import (
 	str "strings"
 )
 
-func Contains(strings []string, s string) bool {
-	for _, s2 := range strings {
-		if s2 == s {
-			return true
-		}
-	}
-	return false
-}
+var (
+	regexpGroupNumber = regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
+	SubgroupRegexp    = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
+)
 
-func Parse() []models.Group {
-	GroupList123 := make([]string, 0)
-	var count int
+func Parse() *[]models.Group {
+	var uniqueGroupsList = make([]string, 0)
 	var groups []models.Group
+
 	links, err := html.GetExcelLinks()
 	if err != nil {
 		log.Panicf("Error occured while html parsing. %v", err)
 	}
 
-	regexpGroupNumber := regexp.MustCompile(`[А-Я]{4}[-]\d{2}[-]\d{2}`)
 	for i, link := range links[0] {
 		path := "C:/Excel/" + strconv.Itoa(i) + ".xlsx"
-		defer fmt.Println(path)
 		err := app.GetFile(path, link)
 		if err != nil {
 			panic(err)
@@ -44,12 +38,12 @@ func Parse() []models.Group {
 			fmt.Println(path)
 			panic(err)
 		}
-		test := xl.Sheets()
-		for test.HasNext() { //следующий лист
-			_, sheet := test.Next()
+		sheetIterator := xl.Sheets()
+		for sheetIterator.HasNext() { //следующий лист
+			_, sheet := sheetIterator.Next()
 			table := GetTable(sheet)
 			rowInfo, colInfo := GetCoords(table, "день недели") //коориданаты панели с днём недели №пары и т.д.
-			if rowInfo == -1 {                                  // Чек на пустую страницу excel
+			if rowInfo == -1 {                                  //чек на пустую страницу excel
 				continue
 			}
 			for table[rowInfo][colInfo] == table[rowInfo][colInfo+1] { //фикс скрытого A столбика в ТХТ
@@ -57,47 +51,35 @@ func Parse() []models.Group {
 			}
 			rowInfo += 2
 			rowsTable := GetRows(table) // количество строк
-			for rowGroup, strings := range table {
+			for _, strings := range table {
 				for colGroup, s := range strings {
-
-					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(GroupList123, regexpGroupNumber.FindString(s)) {
-						count++
-						GroupList123 = append(GroupList123, regexpGroupNumber.FindString(s))
+					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(uniqueGroupsList, regexpGroupNumber.FindString(s)) {
+						uniqueGroupsList = append(uniqueGroupsList, regexpGroupNumber.FindString(s))
 						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
+							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 1, s)
+							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
 							models.GroupMap[regexpGroupNumber.FindString(s)] = true
-							SubgroupNumber = 1
-							group1 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group1.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-1"
-							group1.SubGroup = 1
-							group1.Clear()
-							groups = append(groups, group1)
-
-							SubgroupNumber = 2
-							group2 := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group2.Name = regexpGroupNumber.FindString(str.ToTitle(s)) // + "-2"
-							group2.SubGroup = 2
-							group2.Clear()
-							groups = append(groups, group2)
 						} else {
+							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
 							models.GroupMap[regexpGroupNumber.FindString(s)] = false
-							group := GetGroup(&table, rowGroup, colGroup, colInfo, rowInfo, rowsTable)
-							group.Name = regexpGroupNumber.FindString(str.ToTitle(s))
-							group.SubGroup = 0
-							group.Clear()
-							groups = append(groups, group)
 						}
-						SubgroupNumber = 0
 					}
 				}
 			}
 		}
 	}
-	log.Println("Кол-во групп")
-	log.Println(count)
-	return groups
+	return &groups
 }
 
-var SubgroupRegexp = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
+func GroupCreate(groups *[]models.Group, table *[][]string, colGroup int, colInfo int, rowInfo int, rows int, subgroup int, groupName string) {
+	SubgroupNumber = subgroup
+	group := GetGroup(table, colGroup, colInfo, rowInfo, rows)
+	group.Name = regexpGroupNumber.FindString(str.ToTitle(groupName))
+	group.SubGroup = subgroup
+	group.Clear()
+	*groups = append(*groups, group)
+	SubgroupNumber = 0
+}
 
 func CheckSubgroups(table *[][]string, colGroup int, rowInfo int, rows int) bool {
 	for i := rowInfo; i < rows; i++ {
@@ -108,8 +90,8 @@ func CheckSubgroups(table *[][]string, colGroup int, rowInfo int, rows int) bool
 	return false
 }
 
-func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInfo int, rows int) models.Group {
-	result := models.NewGroup()
+func GetGroup(table *[][]string, colGroup int, colInfo int, rowInfo int, rows int) models.Group {
+	var result = models.NewGroup()
 	var lessons []models.Lesson
 	for i := rowInfo; i < rows; i++ {
 		/*
@@ -122,9 +104,11 @@ func GetGroup(table *[][]string, rowGroup int, colGroup int, colInfo int, rowInf
 			table[i][colInfo+4]  	Неделя
 		*/
 		if SubgroupRegexp.MatchString((*table)[i][colGroup]) { //проверка на подгруппы
-			lessons = SubGroupParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
+			lessons = SubGroupParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2],
+				(*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
 		} else {
-			lessons = DefaultParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2], (*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
+			lessons = DefaultParse((*table)[i][colGroup], (*table)[i][colGroup+1], (*table)[i][colGroup+2],
+				(*table)[i][colGroup+3], (*table)[i][colInfo], (*table)[i][colInfo+1], (*table)[i][colInfo+4])
 		}
 		for j := 0; j < len(lessons); j++ {
 			if !lessons[j].Exists {
@@ -184,4 +168,13 @@ func GetTable(sheet xlsx.Sheet) [][]string {
 		}
 	}
 	return table
+}
+
+func Contains(strings []string, s string) bool {
+	for _, s2 := range strings {
+		if s2 == s {
+			return true
+		}
+	}
+	return false
 }
