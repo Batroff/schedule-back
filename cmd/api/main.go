@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/batroff/schedule-back/app"
 	"github.com/batroff/schedule-back/app/excel"
+	"github.com/batroff/schedule-back/app/hash"
+	"github.com/batroff/schedule-back/app/html"
 	"github.com/batroff/schedule-back/database"
 	"github.com/batroff/schedule-back/models/config"
 	"github.com/batroff/schedule-back/server"
@@ -11,40 +14,56 @@ import (
 )
 
 func main() {
-	if os.Args[1] == "--debug" {
-		debugMain()
-	} else {
-		prodMain()
+	for _, arg := range os.Args {
+		if arg == "--debug" {
+			debugMain()
+			return
+		}
 	}
+
+	prodMain()
 }
 
 func debugMain() {
-	//err := app.GetFile("/tmp/hash.xlsx", "https://webservices.mirea.ru/upload/iblock/288/ФТИ_1к_20-21_весна.xlsx")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
+	links, htmlParseErr := html.GetExcelLinks()
+	if htmlParseErr != nil {
+		log.Panicf("Error occured while html parsing. %v", htmlParseErr)
+	}
 
-	//f, err := os.Open("/tmp/hash.xlsx")
-	//if err != nil {
-	//	log.Panic(err)
-	//}
-	//defer f.Close()
+	excelFiles, downloadErr := app.GetScheduleXlsx("/tmp", links[0])
+	if downloadErr != nil {
+		log.Panicf("Excel files download error. %v", downloadErr)
+	}
 
-	//b, _ := os.ReadFile("/tmp/hash.xlsx")
-	//hash = sha1.New()
-	//hash.Write
+	_, parseErr := excel.ParseMultiple(excelFiles)
+	if parseErr != nil {
+		log.Panicf("%v", parseErr)
+	}
 
-	//hash := sha256.New()
-	//if _, err := io.Copy(hash, f); err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Printf("%x", hash.Sum(nil))
+	hashes, hashErr := hash.ExcelManyTransform(excelFiles)
+	if hashErr != nil {
+		log.Panicf("%v", hashErr)
+	}
+	fmt.Println(hashes)
 }
 
 func prodMain() {
 	cfg := initConfig()
 
-	groups := excel.Parse()
+	links, htmlParseErr := html.GetExcelLinks()
+	if htmlParseErr != nil {
+		log.Panicf("Error occured while html parsing. %v", htmlParseErr)
+	}
+
+	excelFiles, downloadErr := app.GetScheduleXlsx("/tmp", links[0])
+	if downloadErr != nil {
+		log.Panicf("Excel files download error. %v", downloadErr)
+	}
+
+	groups, parseErr := excel.ParseMultiple(excelFiles)
+	if parseErr != nil {
+		log.Panicf("%v", parseErr)
+	}
 
 	dbConfig := database.SetConfig(cfg.Mongo.Host)
 	groupsQuery := database.SetQuery("schedule", "groups")
