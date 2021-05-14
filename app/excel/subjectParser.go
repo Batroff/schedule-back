@@ -7,6 +7,17 @@ import (
 	"strings"
 )
 
+var searchForNumbersRegexp = regexp.MustCompile("(кр[ ])?((((\\d{2}|\\d)( *[ \\-,] *)){1,17}(\\d{2}|\\d))|(\\d{2}|\\d))") // регулярка для обнаружения чисел в строках
+var searchForNumbersInBracesRegexp = regexp.MustCompile("\\((((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+((нед\\.\\))|(нед\\)))") // регулярка для недель через тире запятую или пробел в скобках
+var searchForNumbersWithDashNoBraces = regexp.MustCompile("((\\d{2}|\\d)-(\\d{2}|\\d)) нед\\.?")                          // регулярка для недель через тире без скобок
+// var searchForNumbersWithDashNoBracesNoDot = regexp.MustCompile("(\\d{2}|\\d)-(\\d{2}|\\d) нед") // searchForNumbersWithDashNoBraces б эта строка была в NumbersIndex
+var searchForNumbersRegexpCrutch1 = regexp.MustCompile("((кр\\.[ ]*)|(кр[ ]*))?(((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+(((\\d{2}|\\d))|(\\d{2}|\\d)|([ ]*н\\.)|([ ]*н ))") // searchForNumbersRegexp для особых случаев
+var searchForSlashAtEndOfLineInTeachers = regexp.MustCompile("[А-Яа-я]{1,100} [А-Я].[А-Я].\\/$")                                                                        // костыль на случай препод/\n препод/препод
+var searchForNumbersWithDashDividedBySlash = regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед,\\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед,\\)")                               // для поиска недель через - с запятой
+var searchForNumbersWithDashDividedBySlashNoComma = regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед \\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед\\)")                         // для поиска недель через - без запятой или точки
+var searchForNumbersWithDashDividedBySlashWithDot = regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед\\.\\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед\\.\\)")                    // для поиска недель через - с точкой
+var searchForExcept = regexp.MustCompile("((^)|( ))кр((\\.)|(  ??))")                                                                                                   // ищет кр
+
 func DefaultParse(subject, typeOfLesson, teacherName, cabinet, dayOfWeek, numberLesson, week string) []models.Lesson {
 	RemoveJunk(&subject, &typeOfLesson)
 	subject = strings.ReplaceAll(subject, "1С", "ОДИН ЦЕ")
@@ -86,7 +97,7 @@ func removeSpaces(subject string) string {
 }
 func exceptFlag(subject string) bool {
 	flag := false
-	if regexp.MustCompile("((^)|( ))кр((\\.)|(  ??))").MatchString(subject) {
+	if searchForExcept.MatchString(subject) {
 		flag = true
 	}
 	return flag
@@ -102,13 +113,13 @@ func RemoveJunk(subject, typeOfLesson *string) {
 }
 func SeparateLessons(line string) []string {
 	var lessons []string
-	if regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед,\\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед,\\)").MatchString(line) {
+	if searchForNumbersWithDashDividedBySlash.MatchString(line) {
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "(")+1:strings.Index(line, "/")-1])
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "/")+1:strings.Index(line, ")")-1])
-	} else if regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед \\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед\\)").MatchString(line) {
+	} else if searchForNumbersWithDashDividedBySlashNoComma.MatchString(line) {
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "(")+1:strings.Index(line, "/")-1])
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "/")+1:strings.Index(line, ")")])
-	} else if regexp.MustCompile("\\((\\d{2}|\\d)-(\\d{2}|\\d) нед\\.\\/ (\\d{2}|\\d)-(\\d{2}|\\d) нед\\.\\)").MatchString(line) {
+	} else if searchForNumbersWithDashDividedBySlashWithDot.MatchString(line) {
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "(")+1:strings.Index(line, "/")+1])
 		lessons = append(lessons, line[0:strings.Index(line, "(")-1]+line[strings.Index(line, "/")+1:strings.Index(line, ")")])
 	} else {
@@ -123,25 +134,22 @@ func SeparateLessons(line string) []string {
 	SlashFix(&lessons)
 	return lessons
 }
-func DefaultRegexpNumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку
-	if regexp.MustCompile("(кр[ ])?((((\\d{2}|\\d)( *[ \\-,] *)){1,17}(\\d{2}|\\d))|(\\d{2}|\\d))").FindStringIndex(line) != nil {
-		return regexp.MustCompile("(кр[ ])?((((\\d{2}|\\d)( *[ \\-,] *)){1,17}(\\d{2}|\\d))|(\\d{2}|\\d))").FindStringIndex(line)
+func DefaultRegexpNumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку для строк вида 1, 2, 3, ..., 16 н
+	if searchForNumbersRegexp.FindStringIndex(line) != nil { // Если в строке есть числа возвращает числа иначе -1000
+		return searchForNumbersRegexp.FindStringIndex(line)
 	} else {
-		return []int{-1000, -1000}
+		return []int{-1000, -1000} // вернуть -1000
 	}
 }
-func NumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку с
-	if regexp.MustCompile("\\((((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+((нед\\.\\))|(нед\\)))").FindStringIndex(line) != nil {
-		return regexp.MustCompile("\\((((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+((нед\\.\\))|(нед\\)))").FindStringIndex(line)
+func NumbersIndex(line string) []int { //Возвращает начальный и конечный индексы вхождения номеров недель в строку отличную от стандартной
+	if searchForNumbersInBracesRegexp.FindStringIndex(line) != nil {
+		return searchForNumbersInBracesRegexp.FindStringIndex(line)
 	}
-	if regexp.MustCompile("((\\d{2}|\\d)-(\\d{2}|\\d)) нед\\.").FindStringIndex(line) != nil {
-		return regexp.MustCompile("((\\d{2}|\\d)-(\\d{2}|\\d)) нед\\.").FindStringIndex(line)
+	if searchForNumbersWithDashNoBraces.FindStringIndex(line) != nil {
+		return searchForNumbersWithDashNoBraces.FindStringIndex(line)
 	}
-	if regexp.MustCompile("(\\d{2}|\\d)-(\\d{2}|\\d) нед").FindStringIndex(line) != nil {
-		return regexp.MustCompile("(\\d{2}|\\d)-(\\d{2}|\\d) нед").FindStringIndex(line)
-	}
-	if regexp.MustCompile("((кр\\.[ ]*)|(кр[ ]*))?(((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+(((\\d{2}|\\d))|(\\d{2}|\\d)|([ ]*н\\.)|([ ]*н ))").FindStringIndex(line) != nil {
-		return regexp.MustCompile("((кр\\.[ ]*)|(кр[ ]*))?(((\\d{2}|\\d)( *[ \\-,]? *)){1,17})+(((\\d{2}|\\d))|(\\d{2}|\\d)|([ ]*н\\.)|([ ]*н ))").FindStringIndex(line)
+	if searchForNumbersRegexpCrutch1.FindStringIndex(line) != nil {
+		return searchForNumbersRegexpCrutch1.FindStringIndex(line)
 	} else {
 		return []int{-1000, -1000}
 	}
@@ -286,7 +294,7 @@ func SliceSlashManage(i int, slice *[]string) { // Разбивает элеме
 		partBefore = (*slice)[i][0 : DefaultRegexpNumbersIndex((*slice)[i])[1]+4] // часть с кроме или номерами недель
 		(*slice)[i] = (*slice)[i][DefaultRegexpNumbersIndex((*slice)[i])[1]+4:]
 	}
-	if regexp.MustCompile("[А-Яа-я]{1,100} [А-Я].[А-Я].\\/$").MatchString((*slice)[i]) { // костыль на случай препод/\n препод/препод
+	if searchForSlashAtEndOfLineInTeachers.MatchString((*slice)[i]) { // костыль на случай препод/\n препод/препод
 		(*slice)[i] = partBefore + (*slice)[i][0:strings.Index((*slice)[i], "/")]
 	} else if strings.Contains((*slice)[i], "/") {
 		*slice = append(*slice, "")
