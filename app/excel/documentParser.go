@@ -1,14 +1,10 @@
 package excel
 
 import (
-	"fmt"
-	"github.com/batroff/schedule-back/app"
-	"github.com/batroff/schedule-back/app/html"
 	"github.com/batroff/schedule-back/models"
+	"github.com/pkg/errors"
 	"github.com/plandem/xlsx"
-	"log"
 	"regexp"
-	"strconv"
 	str "strings"
 )
 
@@ -17,58 +13,63 @@ var (
 	SubgroupRegexp    = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
 )
 
-func Parse() *[]models.Group {
-	var uniqueGroupsList = make([]string, 0)
-	var groups []models.Group
+func ParseMultiple(excelPaths []string) (*[]models.Group, error) {
+	var groups = new([]models.Group)
 
-	links, err := html.GetExcelLinks()
-	if err != nil {
-		log.Panicf("Error occured while html parsing. %v", err)
+	for _, filepath := range excelPaths {
+		group, parseErr := parse(filepath) // группа может быть с подгруппой поэтому массив
+		if parseErr != nil {
+			return nil, parseErr
+		}
+
+		for _, g := range *group {
+			*groups = append(*groups, g)
+		}
 	}
 
-	for i, link := range links[0] {
-		path := "C:/Excel/" + strconv.Itoa(i) + ".xlsx"
-		err := app.GetFile(path, link)
-		if err != nil {
-			panic(err)
+	return groups, nil
+}
+
+func parse(excelPath string) (*[]models.Group, error) {
+	var uniqueGroupsList []string
+	var groups = new([]models.Group)
+
+	xl, excelErr := xlsx.Open(excelPath)
+	if excelErr != nil {
+		return nil, errors.Wrapf(excelErr, "Excel open file %s error", excelPath)
+	}
+	sheetIterator := xl.Sheets()
+	for sheetIterator.HasNext() { //следующий лист
+		_, sheet := sheetIterator.Next()
+		table := GetTable(sheet)
+		rowInfo, colInfo := GetCoords(table, "день недели") //коориданаты панели с днём недели №пары и т.д.
+		if rowInfo == -1 {                                  //чек на пустую страницу excel
+			continue
 		}
-		xl, err := xlsx.Open(path)
-		if err != nil {
-			fmt.Println(link)
-			fmt.Println(path)
-			panic(err)
+		for table[rowInfo][colInfo] == table[rowInfo][colInfo+1] { //фикс скрытого A столбика в ТХТ
+			colInfo++
 		}
-		sheetIterator := xl.Sheets()
-		for sheetIterator.HasNext() { //следующий лист
-			_, sheet := sheetIterator.Next()
-			table := GetTable(sheet)
-			rowInfo, colInfo := GetCoords(table, "день недели") //коориданаты панели с днём недели №пары и т.д.
-			if rowInfo == -1 {                                  //чек на пустую страницу excel
-				continue
-			}
-			for table[rowInfo][colInfo] == table[rowInfo][colInfo+1] { //фикс скрытого A столбика в ТХТ
-				colInfo++
-			}
-			rowInfo += 2
-			rowsTable := GetRows(table) // количество строк
-			for _, strings := range table {
-				for colGroup, s := range strings {
-					if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(uniqueGroupsList, regexpGroupNumber.FindString(s)) {
-						uniqueGroupsList = append(uniqueGroupsList, regexpGroupNumber.FindString(s))
-						if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
-							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 1, s)
-							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
-							models.GroupMap[regexpGroupNumber.FindString(s)] = true
-						} else {
-							GroupCreate(&groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
-							models.GroupMap[regexpGroupNumber.FindString(s)] = false
-						}
+		rowInfo += 2
+		rowsTable := GetRows(table) // количество строк
+
+		for _, strings := range table {
+			for colGroup, s := range strings {
+				if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(uniqueGroupsList, regexpGroupNumber.FindString(s)) {
+					uniqueGroupsList = append(uniqueGroupsList, regexpGroupNumber.FindString(s))
+					if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
+						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 1, s)
+						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
+						models.GroupMap[regexpGroupNumber.FindString(s)] = true
+					} else {
+						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
+						models.GroupMap[regexpGroupNumber.FindString(s)] = false
 					}
 				}
 			}
 		}
 	}
-	return &groups
+
+	return groups, nil
 }
 
 func GroupCreate(groups *[]models.Group, table *[][]string, colGroup int, colInfo int, rowInfo int, rows int, subgroup int, groupName string) {
