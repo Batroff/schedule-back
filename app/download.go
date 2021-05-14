@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"strconv"
 )
 
 func GetFile(filepath, url string) error {
@@ -40,4 +42,33 @@ func GetFile(filepath, url string) error {
 	}
 
 	return nil
+}
+
+func GetScheduleXlsx(dirPath string, urls []string) ([]string, error) {
+	scheduleFiles := make([]string, len(urls))
+
+	for i, url := range urls {
+		currPath, pathErr := os.Getwd()
+		if pathErr != nil {
+			return nil, pathErr
+		}
+
+		workDir := currPath + dirPath
+		if _, err := os.Stat(workDir); os.IsNotExist(err) {
+			if createDirErr := os.Mkdir(workDir, os.ModeDir); createDirErr != nil {
+				return nil, createDirErr
+			}
+		}
+
+		excelPath := path.Join(workDir, "schedule_"+strconv.Itoa(i)+".xlsx")
+
+		err := GetFile(excelPath, url)
+		if err != nil {
+			return nil, err
+		}
+
+		scheduleFiles[i] = excelPath
+	}
+
+	return scheduleFiles, nil
 }
