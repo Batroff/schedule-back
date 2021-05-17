@@ -2,10 +2,11 @@ package excel
 
 import (
 	"github.com/batroff/schedule-back/models"
-	"github.com/pkg/errors"
 	"github.com/plandem/xlsx"
+	"log"
 	"regexp"
 	str "strings"
+	"sync"
 )
 
 var (
@@ -13,30 +14,29 @@ var (
 	SubgroupRegexp    = regexp.MustCompile("[^А-Яа-я](п/гр|гр|подгр|подгруп|п/г|подгруппа)([^А-Яа-я]|$)")
 )
 
-func ParseMultiple(excelPaths []string) (*[]models.Group, error) {
-	var groups = new([]models.Group)
+func ParseMultiple(excelPaths []string) ([]models.Group, error) {
+	var groups []models.Group
+
+	var mutex sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(len(excelPaths))
 
 	for _, filepath := range excelPaths {
-		group, parseErr := parse(filepath) // группа может быть с подгруппой поэтому массив
-		if parseErr != nil {
-			return nil, parseErr
-		}
-
-		for _, g := range *group {
-			*groups = append(*groups, g)
-		}
+		go parse(filepath, &groups, &mutex, &wg)
 	}
 
+	wg.Wait()
 	return groups, nil
 }
 
-func parse(excelPath string) (*[]models.Group, error) {
+func parse(excelPath string, groups *[]models.Group, mutex *sync.Mutex, wg *sync.WaitGroup) {
+	defer wg.Done()
 	var uniqueGroupsList []string
-	var groups = new([]models.Group)
 
 	xl, excelErr := xlsx.Open(excelPath)
 	if excelErr != nil {
-		return nil, errors.Wrapf(excelErr, "Excel open file %s error", excelPath)
+		log.Printf("Excel open file %s error; ERROR: %v", excelPath, excelErr)
+		return
 	}
 	sheetIterator := xl.Sheets()
 	for sheetIterator.HasNext() { //следующий лист
@@ -56,6 +56,7 @@ func parse(excelPath string) (*[]models.Group, error) {
 			for colGroup, s := range strings {
 				if regexpGroupNumber.MatchString(str.ToTitle(s)) && !Contains(uniqueGroupsList, regexpGroupNumber.FindString(s)) {
 					uniqueGroupsList = append(uniqueGroupsList, regexpGroupNumber.FindString(s))
+					mutex.Lock()
 					if CheckSubgroups(&table, colGroup, rowInfo, rowsTable) {
 						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 1, s)
 						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
@@ -64,12 +65,13 @@ func parse(excelPath string) (*[]models.Group, error) {
 						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 0, s)
 						models.GroupMap[regexpGroupNumber.FindString(s)] = false
 					}
+					mutex.Unlock()
 				}
 			}
 		}
 	}
 
-	return groups, nil
+	log.Printf("Parse '%s' finished with success", excelPath)
 }
 
 func GroupCreate(groups *[]models.Group, table *[][]string, colGroup int, colInfo int, rowInfo int, rows int, subgroup int, groupName string) {
@@ -117,14 +119,14 @@ func GetGroup(table *[][]string, colGroup int, colInfo int, rowInfo int, rows in
 				j--
 			}
 		}
-		if !(Exist(&lessons) != -1 && len(lessons) == 1) {
+		if !(Exists(&lessons) != -1 && len(lessons) == 1) {
 			result.Days[(*table)[i][colInfo]] = append(result.Days[(*table)[i][colInfo]], lessons...)
 		}
 	}
 	return result
 }
 
-func Exist(lessons *[]models.Lesson) int {
+func Exists(lessons *[]models.Lesson) int {
 	for i, lesson := range *lessons {
 		if lesson.Exists == false {
 			return i
