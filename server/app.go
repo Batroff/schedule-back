@@ -10,6 +10,7 @@ import (
 func Start() {
 	http.HandleFunc("/api/groupList/", handlers.GroupListHandler)
 	http.HandleFunc("/api/group/", handlers.GroupHandler)
+	http.HandleFunc("/api/hash/", handlers.HashHandler)
 
 	cfg, err := app.LoadConfig("config/")
 	if err != nil {
