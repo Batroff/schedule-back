@@ -31,7 +31,7 @@ func InsertGroupList(config *config.MongoConfig, query *config.MongoQuery) error
 	return nil
 }
 
-func InsertGroups(config *config.MongoConfig, query *config.MongoQuery, groups *[]models.Group) error {
+func InsertGroups(config *config.MongoConfig, query *config.MongoQuery, groups []models.Group) error {
 	client, ctx, connectErr := connect(config)
 	if connectErr != nil {
 		return connectErr
@@ -41,7 +41,7 @@ func InsertGroups(config *config.MongoConfig, query *config.MongoQuery, groups *
 	document := client.Database(query.DocumentName)
 	collection := document.Collection(query.CollectionName)
 
-	for _, group := range *groups {
+	for _, group := range groups {
 		_, err := collection.InsertOne(ctx, group)
 		if err != nil {
 			return errors.Wrap(err, "Can not insert groups in db")
