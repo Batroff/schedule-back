@@ -22,7 +22,7 @@ func GroupListHandler(w http.ResponseWriter, _ *http.Request) {
 	groupList, err := database.GetGroupList(cfg.Mongo, groupsQuery)
 	if err == nil {
 		response = &models.ResponseGroupList{
-			GroupList: groupList,
+			GroupList: groupList.Map,
 			ErrorMsg:  "",
 		}
 		w.WriteHeader(http.StatusOK)
