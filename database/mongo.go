@@ -6,7 +6,9 @@ import (
 	"github.com/batroff/schedule-back/models/config"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
+	"strconv"
 )
 
 func InsertGroupList(config *config.MongoConfig, query *config.MongoQuery) error {
@@ -51,6 +53,23 @@ func InsertGroups(config *config.MongoConfig, query *config.MongoQuery, groups *
 	return nil
 }
 
+func InsertHash(config *config.MongoConfig, query *config.MongoQuery, hash []string) error {
+	client, ctx, connectErr := connect(config)
+	if connectErr != nil {
+		return connectErr
+	}
+	defer disconnect(client, ctx)
+
+	collection := client.Database(query.DocumentName).Collection(query.CollectionName)
+
+	_, insertErr := collection.InsertOne(ctx, bson.M{"hash": hash})
+	if insertErr != nil {
+		return insertErr
+	}
+
+	return nil
+}
+
 func FindGroup(config *config.MongoConfig, query *config.MongoQuery, groupName string, subgroup string) (*models.Group, error) {
 	var group *models.Group
 
@@ -60,15 +79,22 @@ func FindGroup(config *config.MongoConfig, query *config.MongoQuery, groupName s
 	}
 	defer disconnect(client, ctx)
 
-	document := client.Database(query.DocumentName)
-	collection := document.Collection(query.CollectionName)
+	collection := client.Database(query.DocumentName).Collection(query.CollectionName)
 
 	var findErr error = nil
+
+	var filter bson.M
 	if subgroup != "" {
-		findErr = collection.FindOne(context.Background(), bson.M{"name": groupName, "subgroup": subgroup[0]}).Decode(&group)
+		subgroupsInt, err := strconv.Atoi(subgroup)
+		if err != nil {
+			return nil, errors.Wrap(err, "Converting subgroupsInt from string to int error")
+		}
+		filter = bson.M{"name": groupName, "subgroup": subgroupsInt}
 	} else {
-		findErr = collection.FindOne(context.Background(), bson.M{"name": groupName}).Decode(&group)
+		filter = bson.M{"name": groupName}
 	}
+	findErr = collection.FindOne(context.Background(), filter).Decode(&group)
+
 	if findErr != nil {
 		return nil, errors.Wrap(findErr, "Group find error")
 	}
@@ -94,4 +120,31 @@ func GetGroupList(config *config.MongoConfig, query *config.MongoQuery) (*models
 	}
 
 	return result, nil
+}
+
+func GetHash(config *config.MongoConfig, query *config.MongoQuery) ([]string, error) {
+	var result map[string]interface{}
+
+	client, ctx, connectErr := connect(config)
+	if connectErr != nil {
+		return nil, connectErr
+	}
+	defer disconnect(client, ctx)
+
+	collection := client.Database(query.DocumentName).Collection(query.CollectionName)
+
+	err := collection.FindOne(context.Background(), bson.M{}).Decode(&result)
+	if err != nil {
+		return nil, errors.Wrap(err, "Can not find hash list")
+	}
+
+	var hash []string
+	for k, v := range result {
+		if k == "hash" {
+			for _, h := range v.(primitive.A) {
+				hash = append(hash, h.(string))
+			}
+		}
+	}
+	return hash, nil
 }
