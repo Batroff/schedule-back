@@ -41,14 +41,16 @@ func InsertGroups(config *config.MongoConfig, query *config.MongoQuery, groups [
 	document := client.Database(query.DocumentName)
 	collection := document.Collection(query.CollectionName)
 
-	for _, group := range groups {
-		_, err := collection.InsertOne(ctx, group)
-		if err != nil {
-			return errors.Wrap(err, "Can not insert groups in db")
-		}
-
-		log.Printf("Group %s uploaded", group.Name)
+	data := make([]interface{}, len(groups))
+	for i, group := range groups {
+		data[i] = group
 	}
+
+	_, err := collection.InsertMany(ctx, data)
+	if err != nil {
+		return errors.Wrap(err, "Can not insert groups in db")
+	}
+	log.Println("Groups successfully uploaded")
 
 	return nil
 }
