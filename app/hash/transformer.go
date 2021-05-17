@@ -23,16 +23,16 @@ func ExcelTransform(filepath string) (string, error) {
 	return ByteTransform(fileBytes), nil
 }
 
-func ExcelManyTransform(paths []string) (map[string]string, error) {
-	transformed := make(map[string]string, len(paths))
+func ExcelManyTransform(paths []string) ([]string, error) {
+	transformed := make([]string, len(paths))
 
-	for _, path := range paths {
+	for i, path := range paths {
 		h, err := ExcelTransform(path)
 		if err != nil {
 			return nil, err
 		}
 
-		transformed[path] = h
+		transformed[i] = h
 	}
 
 	return transformed, nil
