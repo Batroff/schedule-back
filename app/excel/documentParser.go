@@ -61,7 +61,7 @@ func parse(excelPath string) (*[]models.Group, error) {
 						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
 						models.GroupMap[regexpGroupNumber.FindString(s)] = true
 					} else {
-						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 2, s)
+						GroupCreate(groups, &table, colGroup, colInfo, rowInfo, rowsTable, 0, s)
 						models.GroupMap[regexpGroupNumber.FindString(s)] = false
 					}
 				}
