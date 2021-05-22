@@ -1,1 +1,1 @@
-# Schedule app
+# github.com/batroff/schedule-back app

@@ -1,23 +1,15 @@
 package html
 
 import (
-	"bytes"
+	"github.com/batroff/schedule-back/app"
+	"github.com/batroff/schedule-back/models"
 	"golang.org/x/net/html"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
-	"schedule/download"
 	"strings"
 )
-
-// TODO: Create methods & encapsulate struct
-type NodeParams struct {
-	NodeName   string
-	NodeType   html.NodeType
-	Attributes []html.Attribute
-}
 
 /* Get map of links
 0 - Бакалавр/Специалитет;
@@ -28,29 +20,27 @@ type NodeParams struct {
 */
 
 // TODO: add catching exceptions
-func Parse() (map[int][]string, error) {
+func GetExcelLinks() (map[int][]string, error) {
 	const filepath string = "schedule.html"
 
-	downloadErr := download.GetFile(filepath, "https://www.mirea.ru/schedule/")
+	downloadErr := app.GetFile(filepath, "https://www.mirea.ru/schedule/")
 	if downloadErr != nil {
-		log.Panicf("Download error: %v", downloadErr)
-
 		return nil, downloadErr
 	}
 
 	dat, readFileErr := ioutil.ReadFile(filepath)
 	if readFileErr != nil {
-		log.Panicf("Reading file error: %v", readFileErr)
-
+		log.Printf("Reading file error: %s\n", readFileErr)
 		return nil, readFileErr
 	}
 
 	document, htmlParseErr := html.Parse(strings.NewReader(string(dat)))
 	if htmlParseErr != nil {
-		log.Panicf("HTML parse error: %v", htmlParseErr)
+		log.Printf("HTML excel error: %s\n", htmlParseErr)
+		return nil, htmlParseErr
 	}
 
-	ulParams := &NodeParams{
+	ulParams := &models.NodeParams{
 		NodeName:   "ul",
 		NodeType:   html.ElementNode,
 		Attributes: []html.Attribute{{Key: "id", Val: "tab-content"}},
@@ -60,77 +50,15 @@ func Parse() (map[int][]string, error) {
 	links := getLinkNodes(linksContainer)
 	removeFileErr := os.Remove(filepath)
 	if removeFileErr != nil {
-		log.Panicf("Removing file error: %v", removeFileErr)
-
+		log.Printf("Removing file error: %s\n", removeFileErr)
 		return nil, removeFileErr
 	}
 
 	return links, nil
 }
 
-/* Check if node attribute(key) contains substring(value) */
-func attrValueContains(node *html.Node, key string, regexp *regexp.Regexp) bool {
-	for _, attr := range node.Attr {
-		if attr.Key == key && regexp.MatchString(strings.ToLower(attr.Val)) {
-			return true
-		}
-	}
-
-	return false
-}
-
-/* Returns node attribute(key) value */
-func getAttrValue(node *html.Node, key string) string {
-	for _, attr := range node.Attr {
-		if attr.Key == key {
-			return attr.Val
-		}
-	}
-
-	return ""
-}
-
-/* Compares *html.Node Attributes array and input Attribute array.
->> compareFunc should take 2 arguments of html.Attribute
-*/
-func attrCheck(node *html.Node, attributes []html.Attribute, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) bool {
-	attributesMatch := make([]bool, len(attributes))
-
-	for index, attr := range attributes {
-		for _, nodeAttr := range node.Attr {
-			if attributesMatch[index] {
-				break
-			}
-			attributesMatch[index] = compareFunc(nodeAttr, attr)
-		}
-	}
-
-	match := true
-	for _, val := range attributesMatch {
-		if val == false {
-			match = false
-		}
-	}
-
-	return match
-}
-
-/* Returns true if attr1 equals attr2 */
-func attrEquals(attr1, attr2 html.Attribute) bool {
-	return attr1 == attr2
-}
-
-/* Returns true if attr1 values contain attr2 values */
-func attrContains(attr1, attr2 html.Attribute) bool {
-	if attr1.Key != attr2.Key || !strings.Contains(attr1.Val, attr2.Val) {
-		return false
-	}
-
-	return true
-}
-
 /*  */
-func findNode(root *html.Node, params *NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) *html.Node {
+func findNode(root *html.Node, params *models.NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) *html.Node {
 	var find func(node *html.Node)
 	var resultNode *html.Node
 
@@ -162,13 +90,6 @@ func findNode(root *html.Node, params *NodeParams, compareFunc func(attr1 html.A
 	return resultNode
 }
 
-/* TODO: Write selector for multiple nodes
-func findNodes(root *html.Node, params *NodeParams, compareFunc func(attr1 html.Attribute, attr2 html.Attribute) bool) []*html.Node {
-
-}
-*/
-
-/* TODO: Rewrite function */
 func getLinkNodes(ul *html.Node) map[int][]string {
 	/* Find link names */
 	var instituteLinks []string
@@ -206,11 +127,4 @@ func getLinkNodes(ul *html.Node) map[int][]string {
 	}
 
 	return allLinks
-}
-
-func renderNode(n *html.Node) string {
-	var buf bytes.Buffer
-	w := io.Writer(&buf)
-	html.Render(w, n)
-	return buf.String()
 }
